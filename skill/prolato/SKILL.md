@@ -1,37 +1,37 @@
 ---
 name: prolato
-description: Deploy automatico di progetti web su server interno. Usa questo comando per deployare, aggiornare, eliminare o gestire i tuoi progetti.
+description: Automatic deployment of web projects to an internal server. Use this command to deploy, update, delete, or manage your projects.
 ---
 
-# Prolato — Deploy Automatico
+# Prolato — Automatic Deployment
 
-Questa skill gestisce il deploy automatico di progetti web su un server self-hosted.
+This skill handles automatic deployment of web projects to a self-hosted server.
 
-## Configurazione
+## Configuration
 
-La configurazione si trova in `~/.deploy-config.json`. Se non esiste, esegui prima il setup.
+The configuration is stored in `~/.deploy-config.json`. If it doesn't exist, run the setup first.
 
-Leggi il file `~/.deploy-config.json` per ottenere le credenziali necessarie.
+Read the file `~/.deploy-config.json` to get the required credentials.
 
-## Flusso decisionale
+## Decision Flow
 
-1. **Controlla configurazione**: leggi `~/.deploy-config.json`
-   - Se NON esiste → leggi e segui `setup/SKILL.md`
-   - Se esiste → prosegui
+1. **Check configuration**: read `~/.deploy-config.json`
+   - If it does NOT exist → read and follow `setup/SKILL.md`
+   - If it exists → continue
 
-2. **Determina l'azione** dall'input dell'utente:
-   - "deploya" / "pubblica" / "metti online" / "deploy" → vai al punto 3
-   - "aggiorna" / "update" / "rideploya" → vai al punto 3 (e' un re-deploy)
-   - "lista progetti" / "i miei progetti" / "projects" → leggi e segui `manage/SKILL.md` sezione Lista
-   - "elimina" / "rimuovi" / "delete" → leggi e segui `manage/SKILL.md` sezione Elimina
-   - "rollback" / "torna indietro" → leggi e segui `manage/SKILL.md` sezione Rollback
-   - "logs" / "log" → leggi e segui `manage/SKILL.md` sezione Logs
-   - "stato" / "status" → leggi e segui `manage/SKILL.md` sezione Stato
+2. **Determine the action** from user input:
+   - "deploy" / "publish" / "put online" → go to step 3
+   - "update" / "redeploy" → go to step 3 (it's a re-deploy)
+   - "list projects" / "my projects" / "projects" → read and follow `manage/SKILL.md` List section
+   - "delete" / "remove" → read and follow `manage/SKILL.md` Delete section
+   - "rollback" / "revert" → read and follow `manage/SKILL.md` Rollback section
+   - "logs" / "log" → read and follow `manage/SKILL.md` Logs section
+   - "status" → read and follow `manage/SKILL.md` Status section
 
-3. **Analizza il progetto**: leggi e segui `analyze/SKILL.md`
-   - Questo produce un report JSON con framework, database e strategia di deploy
+3. **Analyze the project**: read and follow `analyze/SKILL.md`
+   - This produces a JSON report with framework, database, and deploy strategy
 
-4. **Esegui il deploy**: leggi e segui `deploy/SKILL.md`
-   - Passa il report dell'analisi al deploy
+4. **Execute the deploy**: read and follow `deploy/SKILL.md`
+   - Pass the analysis report to the deploy
 
-5. **Restituisci l'URL** all'utente
+5. **Return the URL** to the user

@@ -1,70 +1,70 @@
 ---
 name: prolato-manage
-description: Gestione progetti deployati (lista, elimina, aggiorna, rollback, logs, stato)
+description: Manage deployed projects (list, delete, update, rollback, logs, status)
 ---
 
-# Gestione Progetti
+# Project Management
 
-Leggi `~/.deploy-config.json` per ottenere `webhook_url` e `deploy_token`.
+Read `~/.deploy-config.json` to get `webhook_url` and `deploy_token`.
 
-## Lista progetti
+## List Projects
 
 ```bash
 curl -s -H "Authorization: Bearer {DEPLOY_TOKEN}" \
     "{WEBHOOK_URL}/projects?owner={USERNAME}"
 ```
 
-Mostra i risultati in formato leggibile:
+Display the results in a readable format:
 
 ```
-I tuoi progetti:
+Your projects:
 
-1. nome-progetto (statico)
-   URL: https://nome-progetto.{DOMINIO}
-   Repo: https://git.{DOMINIO}/{USERNAME}/nome-progetto
-   Ultimo deploy: {DATA}
+1. project-name (static)
+   URL: https://project-name.{DOMAIN}
+   Repo: https://git.{DOMAIN}/{USERNAME}/project-name
+   Last deploy: {DATE}
 ```
 
-## Aggiorna progetto
+## Update Project
 
-E' un re-deploy. Chiedi quale progetto aggiornare (mostra la lista), poi esegui il flusso di deploy normale (analyze → deploy). Il nome progetto e il repo Gitea esistono gia'.
+This is a re-deploy. Ask which project to update (show the list), then execute the normal deploy flow (analyze → deploy). The project name and Gitea repo already exist.
 
-## Elimina progetto
+## Delete Project
 
-**IMPORTANTE: chiedi SEMPRE conferma prima di eliminare.**
+**IMPORTANT: ALWAYS ask for confirmation before deleting.**
 
-Mostra chiaramente cosa verra' eliminato, specialmente se c'e' un database con dati.
+Clearly show what will be deleted, especially if there is a database with data.
 
 ```bash
 curl -s -X DELETE -H "Authorization: Bearer {DEPLOY_TOKEN}" \
-    "{WEBHOOK_URL}/projects/{NOME_PROGETTO}"
+    "{WEBHOOK_URL}/projects/{PROJECT_NAME}"
 ```
 
 ## Rollback
 
 ```bash
 curl -s -X POST -H "Authorization: Bearer {DEPLOY_TOKEN}" \
-    "{WEBHOOK_URL}/projects/{NOME_PROGETTO}/rollback"
+    "{WEBHOOK_URL}/projects/{PROJECT_NAME}/rollback"
 ```
 
-Mostra il risultato. Informa l'utente che supporta un solo livello di rollback.
+Show the result. Inform the user that only one level of rollback is supported.
 
 ## Logs
 
-Solo per progetti Docker.
+Only for Docker projects.
 
 ```bash
 curl -s -H "Authorization: Bearer {DEPLOY_TOKEN}" \
-    "{WEBHOOK_URL}/projects/{NOME_PROGETTO}/logs?lines=50"
+    "{WEBHOOK_URL}/projects/{PROJECT_NAME}/logs?lines=50"
 ```
 
-Mostra i log all'utente. Utile per debug se il progetto non funziona.
+Show the logs to the user. Useful for debugging if the project is not working.
 
-## Stato
+## Status
 
 ```bash
 curl -s -H "Authorization: Bearer {DEPLOY_TOKEN}" \
-    "{WEBHOOK_URL}/projects/{NOME_PROGETTO}/status"
+    "{WEBHOOK_URL}/projects/{PROJECT_NAME}/status"
 ```
 
-Mostra lo stato: per statico (file presenti o meno), per Docker (container running/stopped).
+Show the status: for static (files present or not), for Docker (container running/stopped).

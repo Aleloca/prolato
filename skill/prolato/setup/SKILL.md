@@ -1,52 +1,52 @@
 ---
 name: prolato-setup
-description: Setup iniziale per un nuovo utente Prolato
+description: Initial setup for a new Prolato user
 ---
 
-# Setup Utente Prolato
+# Prolato User Setup
 
-Questa sub-skill viene eseguita solo la prima volta che un utente usa Prolato. Configura tutto automaticamente.
+This sub-skill runs only the first time a user uses Prolato. It configures everything automatically.
 
-## Prerequisiti
+## Prerequisites
 
-L'admin del sistema deve fornirti:
-- L'URL del server Gitea (es. `https://git.tuodominio.dev`)
-- L'URL del webhook (es. `https://webhook.tuodominio.dev`)
-- Il deploy token del webhook
-- Il token admin di Gitea (solo per il primo setup — serve a creare il tuo account)
-- Il dominio (es. `tuodominio.dev`)
+The system admin must provide you with:
+- The Gitea server URL (e.g., `https://git.yourdomain.dev`)
+- The webhook URL (e.g., `https://webhook.yourdomain.dev`)
+- The webhook deploy token
+- The Gitea admin token (only for first-time setup — needed to create your account)
+- The domain (e.g., `yourdomain.dev`)
 
-## Passo 1: Raccogli informazioni
+## Step 1: Gather Information
 
-Chiedi all'utente SOLO queste informazioni:
-- **Nome completo** (per i commit Git, es. "Mario Rossi")
-- **Email** (per i commit Git, es. "mario@azienda.it")
-- **Dominio** del server Prolato (es. "prolato.dev")
-- **Deploy token** del webhook
-- **Token admin Gitea** (se l'utente e' l'admin che configura il sistema per la prima volta)
+Ask the user for ONLY this information:
+- **Full name** (for Git commits, e.g., "John Doe")
+- **Email** (for Git commits, e.g., "john@company.com")
+- **Domain** of the Prolato server (e.g., "prolato.dev")
+- **Deploy token** for the webhook
+- **Gitea admin token** (if the user is the admin setting up the system for the first time)
 
-## Passo 2: Genera chiave SSH
+## Step 2: Generate SSH Key
 
-Controlla se esiste gia' una chiave dedicata. Se no, generala.
+Check if a dedicated key already exists. If not, generate one.
 
 ```bash
 if [ ! -f ~/.ssh/deploy_key ]; then
     ssh-keygen -t ed25519 -f ~/.ssh/deploy_key -N "" -C "deploy-$(whoami)"
-    echo "Chiave SSH generata: ~/.ssh/deploy_key"
+    echo "SSH key generated: ~/.ssh/deploy_key"
 else
-    echo "Chiave SSH gia' presente: ~/.ssh/deploy_key"
+    echo "SSH key already exists: ~/.ssh/deploy_key"
 fi
 ```
 
-Tipo `ed25519` (piu' sicuro e compatto di RSA). Nessuna passphrase per permettere deploy automatici.
+Type `ed25519` (more secure and compact than RSA). No passphrase to allow automatic deploys.
 
-## Passo 3: Configura SSH per Gitea
+## Step 3: Configure SSH for Gitea
 
-Aggiungi o aggiorna il blocco per Gitea in `~/.ssh/config`:
+Add or update the Gitea block in `~/.ssh/config`:
 
 ```
-Host git.{DOMINIO}
-    HostName git.{DOMINIO}
+Host git.{DOMAIN}
+    HostName git.{DOMAIN}
     Port 2222
     User git
     IdentityFile ~/.ssh/deploy_key
@@ -54,24 +54,24 @@ Host git.{DOMINIO}
     StrictHostKeyChecking no
 ```
 
-- Porta `2222`: la porta SSH di Gitea (configurata nel server).
-- `StrictHostKeyChecking no`: evita la richiesta di conferma al primo collegamento.
-- Controlla se il blocco esiste gia' prima di aggiungerlo. Se esiste, aggiornalo.
+- Port `2222`: the Gitea SSH port (configured on the server).
+- `StrictHostKeyChecking no`: avoids the confirmation prompt on first connection.
+- Check if the block already exists before adding it. If it exists, update it.
 
-## Passo 4: Crea account Gitea
+## Step 4: Create Gitea Account
 
-Genera username e password, poi crea l'account via API admin.
+Generate username and password, then create the account via admin API.
 
 ```bash
-# Genera username dal nome (es. "Mario Rossi" → "mario.rossi")
-# Usa solo lettere minuscole, punti per separare
-# Se esiste gia', aggiungi suffisso numerico (mario.rossi.2)
+# Generate username from name (e.g., "John Doe" → "john.doe")
+# Use only lowercase letters, dots to separate
+# If already taken, add numeric suffix (john.doe.2)
 
-# Genera password random
+# Generate random password
 GITEA_PASSWORD=$(openssl rand -hex 16)
 
-# Crea utente via API admin
-curl -s -X POST "https://git.{DOMINIO}/api/v1/admin/users" \
+# Create user via admin API
+curl -s -X POST "https://git.{DOMAIN}/api/v1/admin/users" \
     -H "Authorization: token {ADMIN_TOKEN}" \
     -H "Content-Type: application/json" \
     -d '{
@@ -83,96 +83,96 @@ curl -s -X POST "https://git.{DOMINIO}/api/v1/admin/users" \
     }'
 ```
 
-Verifica la risposta. Se restituisce errore "user already exists", l'account esiste gia' — procedi al passo successivo usando le credenziali esistenti o chiedendo all'utente.
+Check the response. If it returns a "user already exists" error, the account already exists — proceed to the next step using existing credentials or ask the user.
 
-## Passo 5: Genera token utente e aggiungi chiave SSH
+## Step 5: Generate User Token and Add SSH Key
 
 ```bash
-# Genera token utente Gitea
-USER_TOKEN=$(curl -s -X POST "https://git.{DOMINIO}/api/v1/users/{USERNAME}/tokens" \
+# Generate Gitea user token
+USER_TOKEN=$(curl -s -X POST "https://git.{DOMAIN}/api/v1/users/{USERNAME}/tokens" \
     -u "{USERNAME}:$GITEA_PASSWORD" \
     -H "Content-Type: application/json" \
     -d '{"name": "deploy-token", "scopes": ["write:repository", "write:user"]}' | grep -o '"sha1":"[^"]*"' | cut -d'"' -f4)
 
-# Leggi la chiave pubblica
+# Read the public key
 SSH_PUBLIC_KEY=$(cat ~/.ssh/deploy_key.pub)
 
-# Aggiungi la chiave SSH all'account Gitea
-curl -s -X POST "https://git.{DOMINIO}/api/v1/user/keys" \
+# Add the SSH key to the Gitea account
+curl -s -X POST "https://git.{DOMAIN}/api/v1/user/keys" \
     -H "Authorization: token $USER_TOKEN" \
     -H "Content-Type: application/json" \
     -d "{\"title\": \"deploy-key-$(hostname)\", \"key\": \"$SSH_PUBLIC_KEY\"}"
 ```
 
-Se la chiave esiste gia' (errore "key already exists"), e' ok — prosegui.
+If the key already exists ("key already exists" error), that's fine — continue.
 
-## Passo 6: Configura Git locale
+## Step 6: Configure Local Git
 
 ```bash
-# Controlla se esiste gia' una configurazione Git globale
+# Check if a global Git configuration already exists
 EXISTING_NAME=$(git config --global user.name 2>/dev/null)
 
 if [ -z "$EXISTING_NAME" ]; then
-    # Nessuna config globale — imposta
-    git config --global user.name "{NOME}"
+    # No global config — set it up
+    git config --global user.name "{NAME}"
     git config --global user.email "{EMAIL}"
 else
-    # Config globale esistente — NON sovrascrivere
-    # La skill usera' config locale per ogni progetto
-    echo "Git gia' configurato come: $EXISTING_NAME"
-    echo "La skill usera' configurazione locale per ogni progetto deployato."
+    # Global config exists — do NOT overwrite
+    # The skill will use local config for each project
+    echo "Git already configured as: $EXISTING_NAME"
+    echo "The skill will use local configuration for each deployed project."
 fi
 ```
 
-## Passo 7: Salva configurazione
+## Step 7: Save Configuration
 
-Scrivi il file `~/.deploy-config.json`:
+Write the file `~/.deploy-config.json`:
 
 ```json
 {
-    "gitea_url": "https://git.{DOMINIO}",
+    "gitea_url": "https://git.{DOMAIN}",
     "gitea_username": "{USERNAME}",
     "gitea_token": "{USER_TOKEN}",
     "gitea_admin_token": "{ADMIN_TOKEN}",
-    "webhook_url": "https://webhook.{DOMINIO}",
+    "webhook_url": "https://webhook.{DOMAIN}",
     "deploy_token": "{DEPLOY_TOKEN}",
-    "domain": "{DOMINIO}",
+    "domain": "{DOMAIN}",
     "ssh_key_path": "~/.ssh/deploy_key"
 }
 ```
 
-Imposta permessi restrittivi: `chmod 600 ~/.deploy-config.json`
+Set restrictive permissions: `chmod 600 ~/.deploy-config.json`
 
-## Passo 8: Test di connessione
+## Step 8: Connection Test
 
-Esegui tutti e tre i test. Tutti devono passare.
+Run all three tests. All must pass.
 
 ```bash
-# 1. Test SSH verso Gitea
-ssh -T git@git.{DOMINIO} -p 2222 -o ConnectTimeout=5 2>&1
+# 1. SSH test to Gitea
+ssh -T git@git.{DOMAIN} -p 2222 -o ConnectTimeout=5 2>&1
 
-# 2. Test API Gitea
+# 2. Gitea API test
 curl -s -H "Authorization: token {USER_TOKEN}" \
-    "https://git.{DOMINIO}/api/v1/user" | grep -q '"login"'
+    "https://git.{DOMAIN}/api/v1/user" | grep -q '"login"'
 
-# 3. Test Webhook
+# 3. Webhook test
 curl -s -H "Authorization: Bearer {DEPLOY_TOKEN}" \
-    "https://webhook.{DOMINIO}/health" | grep -q '"ok"'
+    "https://webhook.{DOMAIN}/health" | grep -q '"ok"'
 ```
 
-### Se tutti passano
+### If All Pass
 
-Mostra:
+Display:
 ```
-Setup completato!
-- Account Gitea: {USERNAME}
-- Dominio: {DOMINIO}
-- Ora puoi deployare i tuoi progetti con "deploya questo progetto"
+Setup complete!
+- Gitea account: {USERNAME}
+- Domain: {DOMAIN}
+- You can now deploy your projects with "deploy this project"
 ```
 
-### Se uno fallisce
+### If One Fails
 
-Mostra l'errore specifico e suggerisci correzioni:
-- SSH fallisce → "Verifica che il server Gitea sia raggiungibile e che la porta 2222 sia aperta"
-- API Gitea fallisce → "Verifica che l'URL Gitea sia corretto e che il token sia valido"
-- Webhook fallisce → "Verifica che il webhook sia attivo e che il deploy token sia corretto"
+Show the specific error and suggest fixes:
+- SSH fails → "Verify that the Gitea server is reachable and that port 2222 is open"
+- Gitea API fails → "Verify that the Gitea URL is correct and that the token is valid"
+- Webhook fails → "Verify that the webhook is active and that the deploy token is correct"
