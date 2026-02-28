@@ -36,6 +36,8 @@ Cerca questi pattern nei valori delle variabili:
 
 Annota anche il nome della variabile d'ambiente (es. `DATABASE_URL`, `MONGODB_URI`) — servira' per il campo `env_var_name` nell'output.
 
+**ATTENZIONE — Dati sensibili**: ai fini del rilevamento, conta solo il nome della variabile e il prefisso dello schema URL (es. `postgresql://`, `mongodb://`). NON includere mai password, hostname, porte o credenziali reali nell'output dell'analisi. I valori effettivi delle variabili d'ambiente non devono mai comparire nel report JSON.
+
 ## Passo 3: Dipendenze in package.json
 
 Controlla `dependencies` e `devDependencies` in `package.json`:
@@ -69,40 +71,9 @@ Se esiste un file `docker-compose.yml` o `docker-compose.yaml` o `compose.yml`, 
 
 ## Output
 
-Per ogni database trovato, raccogli queste informazioni:
+Il campo `database` e' **sempre un array** (anche con un solo database). Se non viene trovato nessun database, imposta `"database": null`.
 
-```json
-{
-    "database": {
-        "engine": "postgres",
-        "orm": "prisma",
-        "schema_source": "prisma/schema.prisma",
-        "has_migrations": true,
-        "migrations_dir": "prisma/migrations",
-        "has_seed": true,
-        "seed_command": "npx prisma db seed",
-        "local_db_file": null,
-        "env_var_name": "DATABASE_URL",
-        "additional_services": ["redis"]
-    }
-}
-```
-
-Dettagli sui campi:
-- `engine`: `"postgres"`, `"mysql"`, `"sqlite"`, `"mongodb"`, `"redis"`
-- `orm`: il nome dell'ORM trovato al Passo 1, o `null` se non usa un ORM
-- `schema_source`: il percorso del file di schema/configurazione ORM, o `null`
-- `has_migrations`: `true` se esiste una cartella di migrazioni (es. `prisma/migrations`, `migrations/`, `drizzle/`)
-- `migrations_dir`: il percorso della cartella migrazioni, o `null`
-- `has_seed`: `true` se esiste uno script di seed (controlla `prisma.seed` in `package.json`, o file `seed.ts`/`seed.js`)
-- `seed_command`: il comando per eseguire il seed (es. `"npx prisma db seed"`, `"npm run seed"`), o `null`
-- `local_db_file`: il percorso del file SQLite locale se trovato al Passo 4, o `null`
-- `env_var_name`: il nome della variabile d'ambiente che contiene l'URL del database
-- `additional_services`: lista di servizi aggiuntivi trovati (es. `["redis"]`), o `[]`
-
-## Database multipli
-
-Un progetto puo' usare piu' database contemporaneamente (es. PostgreSQL per i dati + Redis per la cache). In quel caso, `database` diventa un array:
+Per ogni database trovato, aggiungi un elemento all'array con queste informazioni:
 
 ```json
 {
@@ -116,8 +87,40 @@ Un progetto puo' usare piu' database contemporaneamente (es. PostgreSQL per i da
             "has_seed": true,
             "seed_command": "npx prisma db seed",
             "local_db_file": null,
-            "env_var_name": "DATABASE_URL",
-            "additional_services": []
+            "env_var_name": "DATABASE_URL"
+        }
+    ]
+}
+```
+
+Dettagli sui campi:
+- `engine`: `"postgres"`, `"mysql"`, `"sqlite"`, `"mongodb"`, `"redis"`
+- `orm`: il nome dell'ORM trovato al Passo 1, o `null` se non usa un ORM
+- `schema_source`: il percorso del file di schema/configurazione ORM, o `null`
+- `has_migrations`: `true` se esiste una cartella di migrazioni (es. `prisma/migrations`, `migrations/`, `drizzle/`)
+- `migrations_dir`: il percorso della cartella migrazioni, o `null`
+- `has_seed`: `true` se esiste uno script di seed (controlla `prisma.seed` in `package.json`, o file `seed.ts`/`seed.js`)
+- `seed_command`: il comando per eseguire il seed (es. `"npx prisma db seed"`, `"npm run seed"`), o `null`
+- `local_db_file`: il percorso del file SQLite locale se trovato al Passo 4, o `null`
+- `env_var_name`: il nome della variabile d'ambiente che contiene l'URL del database
+
+## Database multipli
+
+Un progetto puo' usare piu' database contemporaneamente (es. PostgreSQL per i dati + Redis per la cache). Ogni servizio ha il proprio elemento nell'array:
+
+```json
+{
+    "database": [
+        {
+            "engine": "postgres",
+            "orm": "prisma",
+            "schema_source": "prisma/schema.prisma",
+            "has_migrations": true,
+            "migrations_dir": "prisma/migrations",
+            "has_seed": true,
+            "seed_command": "npx prisma db seed",
+            "local_db_file": null,
+            "env_var_name": "DATABASE_URL"
         },
         {
             "engine": "redis",
@@ -128,11 +131,8 @@ Un progetto puo' usare piu' database contemporaneamente (es. PostgreSQL per i da
             "has_seed": false,
             "seed_command": null,
             "local_db_file": null,
-            "env_var_name": "REDIS_URL",
-            "additional_services": []
+            "env_var_name": "REDIS_URL"
         }
     ]
 }
 ```
-
-Se non viene trovato nessun database, imposta `"database": null`.

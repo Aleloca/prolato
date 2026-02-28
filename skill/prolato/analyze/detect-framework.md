@@ -21,6 +21,18 @@ Se esiste `package.json` nella root del progetto, leggilo e cerca nelle `depende
 
 La tabella e' in ordine di priorita': se trovi `next` e anche `react`, il framework e' Next.js (non React).
 
+### Rilevamento versione framework
+
+Dopo aver identificato il framework, rileva la sua versione dal campo corrispondente in `package.json` (`dependencies` o `devDependencies`). Estrai la versione numerica rimuovendo prefissi come `^`, `~`, `>=`, ecc.
+
+Esempi:
+- `"next": "^14.0.0"` → `version`: `"14.0.0"`
+- `"react": "~18.2.0"` → `version`: `"18.2.0"`
+- `"express": "4.18.2"` → `version`: `"4.18.2"`
+- `"astro": ">=4.0.0"` → `version`: `"4.0.0"`
+
+Se la versione non e' determinabile (es. `"*"` o `"latest"`), imposta `version`: `null`.
+
 ## Passo 2: Se non esiste `package.json`
 
 Controlla la presenza di questi file/cartelle:
@@ -159,7 +171,10 @@ Valori da impostare:
 - `has_api_routes`: `true`
 - `build_command`: `null`
 - `output_dir`: `null`
-- `start_command`: dipende dal framework Python rilevato
+- `start_command`:
+  - Flask: `"python -m flask run --host=0.0.0.0 --port=8080"` (oppure `"gunicorn app:app"` se `gunicorn` e' nelle dipendenze)
+  - Django: `"python manage.py runserver 0.0.0.0:8080"` (oppure `"gunicorn {nome_progetto}.wsgi"` se `gunicorn` e' nelle dipendenze)
+  - FastAPI: `"uvicorn main:app --host 0.0.0.0 --port 8080"` (cerca il file che contiene `FastAPI()` per determinare il modulo, es. `app.main:app`)
 
 ### HTML/CSS/JS puro — sempre statico
 
@@ -174,7 +189,27 @@ Valori da impostare:
 - `output_dir`: `"."` (la root del progetto)
 - `start_command`: `null`
 
-## Passo 4: Rilevamento versione Node
+## Passo 4: Progetto non riconosciuto
+
+Se dopo i Passi 1-3 non riesci a identificare nessun framework o tipo di progetto, imposta:
+
+- `name`: `"unknown"`
+- `version`: `null`
+- `has_ssr`: `false`
+- `has_api_routes`: `false`
+- `build_command`: `null`
+- `output_dir`: `null`
+- `start_command`: `null`
+
+In questo caso, chiedi all'utente di specificare:
+1. Di che tipo di progetto si tratta
+2. Qual e' il comando di build (se presente)
+3. Qual e' la cartella di output
+4. Se il progetto necessita di un server (e quale comando lo avvia)
+
+Non procedere con il deploy fino a quando l'utente non fornisce queste informazioni.
+
+## Passo 5: Rilevamento versione Node
 
 Controlla nell'ordine (fermati al primo trovato):
 
