@@ -24,7 +24,8 @@ prompt_config() {
     section "Configuration"
     read -rp "Enter your domain (e.g. example.dev): " DOMAIN
     [[ -z "$DOMAIN" ]] && { error "Domain cannot be empty."; exit 1; }
-    read -rp "Enter your Cloudflare API token: " CF_API_TOKEN
+    read -rsp "Enter your Cloudflare API token: " CF_API_TOKEN
+    echo ""
     [[ -z "$CF_API_TOKEN" ]] && { error "Cloudflare API token cannot be empty."; exit 1; }
     read -rp "Enter email for TLS certificates [admin@${DOMAIN}]: " TLS_EMAIL
     [[ -z "$TLS_EMAIL" ]] && TLS_EMAIL="admin@${DOMAIN}"
@@ -98,7 +99,14 @@ install_caddy() {
     # Install Go if missing
     if ! command -v go &>/dev/null; then
         info "Installing Go..."
-        wget -q "https://go.dev/dl/go1.22.5.linux-amd64.tar.gz" -O /tmp/go.tar.gz
+        local GO_ARCH
+        case "$(dpkg --print-architecture)" in
+            amd64)  GO_ARCH="amd64" ;;
+            arm64)  GO_ARCH="arm64" ;;
+            armhf)  GO_ARCH="armv6l" ;;
+            *)      error "Unsupported architecture: $(dpkg --print-architecture)"; exit 1 ;;
+        esac
+        wget -q "https://go.dev/dl/go1.22.5.linux-${GO_ARCH}.tar.gz" -O /tmp/go.tar.gz
         rm -rf /usr/local/go && tar -C /usr/local -xzf /tmp/go.tar.gz && rm /tmp/go.tar.gz
         export PATH="/usr/local/go/bin:$PATH"
     fi
@@ -118,8 +126,9 @@ Requires=network-online.target
 Type=notify
 User=caddy
 Group=caddy
+EnvironmentFile=/etc/caddy/caddy.env
 ExecStart=/usr/bin/caddy run --environ --config /etc/caddy/Caddyfile
-ExecReload=/usr/bin/caddy reload --config /etc/caddy/Caddyfile --force
+ExecReload=/usr/bin/caddy reload --config /etc/caddy/Caddyfile
 TimeoutStopSec=5s
 LimitNOFILE=1048576
 PrivateTmp=true
@@ -136,7 +145,10 @@ UNIT
 generate_caddyfile() {
     section "Generating Caddyfile"
     mkdir -p /etc/caddy/projects.d
-    cat > /etc/caddy/Caddyfile <<EOF
+    if [[ -f /etc/caddy/Caddyfile ]]; then
+        warn "Caddyfile already exists at /etc/caddy/Caddyfile, not overwriting."
+    else
+        cat > /etc/caddy/Caddyfile <<EOF
 {
     email ${TLS_EMAIL}
 }
@@ -156,15 +168,28 @@ webhook.${DOMAIN} {
 
 *.${DOMAIN} {
     tls {
-        dns cloudflare ${CF_API_TOKEN}
+        dns cloudflare {env.CF_API_TOKEN}
     }
-    import /etc/caddy/projects.d/*.caddy
-    root * /var/www/projects/{host}
+    import /etc/caddy/projects.d/*
+    root * /var/www/projects/{labels.2}
+    try_files {path} /index.html
     file_server
 }
 EOF
+        success "Caddyfile generated at /etc/caddy/Caddyfile"
+    fi
+    # Store CF token in env file instead of plaintext in Caddyfile
+    if [[ ! -f /etc/caddy/caddy.env ]]; then
+        echo "CF_API_TOKEN=${CF_API_TOKEN}" > /etc/caddy/caddy.env
+        chmod 640 /etc/caddy/caddy.env
+        chown root:caddy /etc/caddy/caddy.env
+        success "Caddy env file created at /etc/caddy/caddy.env"
+    else
+        warn "Caddy env file already exists, not overwriting."
+    fi
     chown -R caddy:caddy /etc/caddy
-    success "Caddyfile generated at /etc/caddy/Caddyfile"
+    # Preserve env file ownership after recursive chown
+    chown root:caddy /etc/caddy/caddy.env 2>/dev/null || true
 }
 
 # -- 7. Install and configure Gitea ----------------------------------------
@@ -184,7 +209,10 @@ install_gitea() {
     mkdir -p /var/lib/gitea/{custom,data,log} /etc/gitea
     chown -R git:git /var/lib/gitea
     chown -R root:git /etc/gitea && chmod 770 /etc/gitea
-    cat > /etc/gitea/app.ini <<EOF
+    if [[ -f /etc/gitea/app.ini ]]; then
+        warn "Gitea app.ini already exists, not overwriting."
+    else
+        cat > /etc/gitea/app.ini <<EOF
 APP_NAME = Prolato Git
 RUN_MODE = prod
 RUN_USER = git
@@ -226,7 +254,12 @@ ROOT_PATH = /var/lib/gitea/log
 [security]
 INSTALL_LOCK = true
 EOF
-    chown root:git /etc/gitea/app.ini && chmod 640 /etc/gitea/app.ini
+        chown root:git /etc/gitea/app.ini && chmod 640 /etc/gitea/app.ini
+        success "Gitea app.ini generated."
+    fi
+    if [[ -f /etc/systemd/system/gitea.service ]]; then
+        warn "Gitea systemd unit already exists, not overwriting."
+    else
     cat > /etc/systemd/system/gitea.service <<'UNIT'
 [Unit]
 Description=Gitea (Git with a cup of tea)
@@ -243,8 +276,9 @@ Environment=USER=git HOME=/home/git GITEA_WORK_DIR=/var/lib/gitea
 [Install]
 WantedBy=multi-user.target
 UNIT
+    fi
     systemctl daemon-reload
-    success "Gitea configured at /etc/gitea/app.ini"
+    success "Gitea configured."
 }
 
 # -- 8. Generate SSH keypair for deploy-bot ---------------------------------
@@ -286,14 +320,22 @@ create_directories() {
 # -- 10. Configure sudoers for deploy user ----------------------------------
 configure_sudoers() {
     section "Configuring sudoers for deploy user"
-    cat > /etc/sudoers.d/deploy <<'EOF'
+    local TMP_SUDOERS
+    TMP_SUDOERS=$(mktemp)
+    cat > "$TMP_SUDOERS" <<'EOF'
 # Prolato: allow deploy user to reload Caddy and restart webhook
-deploy ALL=(ALL) NOPASSWD: /usr/bin/caddy reload --config /etc/caddy/Caddyfile --force
+deploy ALL=(ALL) NOPASSWD: /usr/bin/caddy reload --config /etc/caddy/Caddyfile
 deploy ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart webhook
 EOF
-    chmod 440 /etc/sudoers.d/deploy
-    visudo -cf /etc/sudoers.d/deploy &>/dev/null || { error "Sudoers syntax error!"; rm -f /etc/sudoers.d/deploy; exit 1; }
-    success "Sudoers configured at /etc/sudoers.d/deploy"
+    chmod 440 "$TMP_SUDOERS"
+    if visudo -cf "$TMP_SUDOERS" &>/dev/null; then
+        mv "$TMP_SUDOERS" /etc/sudoers.d/deploy
+        success "Sudoers configured at /etc/sudoers.d/deploy"
+    else
+        error "Sudoers syntax error! Discarding invalid file."
+        rm -f "$TMP_SUDOERS"
+        exit 1
+    fi
 }
 
 # -- 11. Clone and configure webhook ---------------------------------------
@@ -342,7 +384,10 @@ EOF
 # -- 12. Create webhook systemd unit ---------------------------------------
 create_webhook_service() {
     section "Creating webhook systemd unit"
-    cat > /etc/systemd/system/webhook.service <<'UNIT'
+    if [[ -f /etc/systemd/system/webhook.service ]]; then
+        warn "Webhook systemd unit already exists, not overwriting."
+    else
+        cat > /etc/systemd/system/webhook.service <<'UNIT'
 [Unit]
 Description=Prolato Deploy Webhook
 After=network.target docker.service
@@ -360,8 +405,9 @@ StandardError=append:/var/log/webhook/webhook.log
 [Install]
 WantedBy=multi-user.target
 UNIT
+        success "Webhook systemd unit created."
+    fi
     systemctl daemon-reload
-    success "Webhook systemd unit created."
 }
 
 # -- 13. Create logrotate config -------------------------------------------
