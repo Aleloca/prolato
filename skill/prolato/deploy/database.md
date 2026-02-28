@@ -1,74 +1,74 @@
-# Configurazione Database per Deploy Docker
+# Database Configuration for Docker Deploy
 
-Questa guida estende il deploy Docker quando il report dell'analisi indica che il progetto utilizza un database. Viene usata in combinazione con `docker.md`.
+This guide extends the Docker deploy when the analysis report indicates that the project uses a database. It is used in combination with `docker.md`.
 
-## Panoramica
+## Overview
 
-Quando il campo `database` del report dell'analisi non e' `null`, questo file guida la generazione di:
+When the `database` field of the analysis report is not `null`, this file guides the generation of:
 
-1. Servizio database nel `docker-compose.yml`
-2. Variabili d'ambiente per la connessione al database
-3. Script `start.sh` con comandi di migrazione
-4. Password del database
+1. Database service in `docker-compose.yml`
+2. Environment variables for database connection
+3. `start.sh` script with migration commands
+4. Database password
 
-## Passo 1: Generazione password database
+## Step 1: Database Password Generation
 
-Genera una password sicura per il database:
+Generate a secure password for the database:
 
 ```bash
 DB_PASSWORD=$(openssl rand -hex 24)
 ```
 
-Questa password:
-- Viene salvata SOLO nel file `.env.production`
-- NON viene mai mostrata all'utente
-- NON viene mai committata nel repository
+This password:
+- Is saved ONLY in the `.env.production` file
+- Is NEVER shown to the user
+- Is NEVER committed to the repository
 
-Se il database richiede anche una password root (es. MySQL), generane una separata:
+If the database also requires a root password (e.g., MySQL), generate a separate one:
 
 ```bash
 DB_ROOT_PASSWORD=$(openssl rand -hex 24)
 ```
 
-## Passo 2: Generazione file .env per Docker Compose
+## Step 2: .env File Generation for Docker Compose
 
-Docker Compose interpola le variabili `${...}` presenti nel `docker-compose.yml` dal file `.env` nella root del progetto (NON da `env_file`, che e' disponibile solo dentro il container). Poiche' il servizio `db` usa `${DB_PASSWORD}`, `${PROJECT_NAME}` (e `${DB_ROOT_PASSWORD}` per MySQL) nella sezione `environment`, questi valori devono essere presenti nel file `.env`.
+Docker Compose interpolates `${...}` variables present in `docker-compose.yml` from the `.env` file in the project root (NOT from `env_file`, which is only available inside the container). Since the `db` service uses `${DB_PASSWORD}`, `${PROJECT_NAME}` (and `${DB_ROOT_PASSWORD}` for MySQL) in the `environment` section, these values must be present in the `.env` file.
 
-Crea un file `.env` nella root del progetto contenente:
+Create a `.env` file in the project root containing:
 
 ```
-DB_PASSWORD={password_generata}
+DB_PASSWORD={generated_password}
 PROJECT_NAME={project_name}
 ```
 
-Per MySQL, aggiungi anche:
+For MySQL, also add:
 ```
-DB_ROOT_PASSWORD={root_password_generata}
+DB_ROOT_PASSWORD={generated_root_password}
 ```
 
-**IMPORTANTE**: questo file `.env` e' separato da `.env.production`. Il file `.env` serve SOLO per l'interpolazione delle variabili nel `docker-compose.yml` da parte di Docker Compose. Il file `.env.production` viene passato ai container tramite `env_file` e contiene tutte le variabili d'ambiente dell'applicazione.
+**IMPORTANT**: this `.env` file is separate from `.env.production`. The `.env` file is ONLY used for variable interpolation in `docker-compose.yml` by Docker Compose. The `.env.production` file is passed to containers via `env_file` and contains all the application's environment variables.
 
-Aggiungi `.env` al `.gitignore` (se non gia' presente) — contiene password e NON deve essere committato:
+Add `.env` to `.gitignore` (if not already present) — it contains passwords and must NOT be committed:
 
 ```bash
 grep -q '^\.env$' .gitignore || echo '.env' >> .gitignore
 ```
 
-**Nota**: il file `.env` viene passato al webhook insieme a `.env.production` come base64. Nell'invio al webhook (Passo 8 di `docker.md`), codifica ENTRAMBI i file:
+**Note**: the `.env` file is passed to the webhook along with `.env.production` as base64. When sending to the webhook (Step 8 of `docker.md`), encode BOTH files:
 
 ```bash
 ENV_B64=$(base64 < .env.production | tr -d '\n')
 COMPOSE_ENV_B64=$(base64 < .env | tr -d '\n')
 ```
 
-E aggiungi `"compose_env"` al payload del webhook:
+And add `"compose_env"` to the webhook payload:
 ```json
 "compose_env": "{base64_encoded_compose_env_file}"
 ```
 
-## Passo 3: Generazione docker-compose.yml
+## Step 3: docker-compose.yml Generation
 
-Genera il `docker-compose.yml` completo, includendo il servizio applicazione E il servizio database.
+Generate the complete `docker-compose.yml`, including the application service AND the database service.
 
 ### PostgreSQL
 
@@ -124,7 +124,7 @@ volumes:
   db_data:
 ```
 
-Variabile d'ambiente per l'app:
+Environment variable for the app:
 ```
 DATABASE_URL=postgresql://app:${DB_PASSWORD}@db:5432/${PROJECT_NAME}
 ```
@@ -184,7 +184,7 @@ volumes:
   db_data:
 ```
 
-Variabile d'ambiente per l'app:
+Environment variable for the app:
 ```
 DATABASE_URL=mysql://app:${DB_PASSWORD}@db:3306/${PROJECT_NAME}
 ```
@@ -243,14 +243,14 @@ volumes:
   db_data:
 ```
 
-Variabile d'ambiente per l'app:
+Environment variable for the app:
 ```
 MONGODB_URI=mongodb://app:${DB_PASSWORD}@db:27017/${PROJECT_NAME}?authSource=admin
 ```
 
-### Redis (servizio aggiuntivo)
+### Redis (Additional Service)
 
-Redis viene aggiunto come servizio aggiuntivo, non come database principale. Si aggiunge al `docker-compose.yml` insieme al database principale (o da solo se il progetto usa solo Redis).
+Redis is added as an additional service, not as the primary database. It is added to `docker-compose.yml` alongside the primary database (or alone if the project only uses Redis).
 
 ```yaml
   redis:
@@ -275,19 +275,19 @@ Redis viene aggiunto come servizio aggiuntivo, non come database principale. Si 
         max-file: "3"
 ```
 
-Variabile d'ambiente per l'app:
+Environment variable for the app:
 ```
 REDIS_URL=redis://redis:6379
 ```
 
-Se Redis e' presente insieme ad un altro database, aggiungi `redis_data` ai volumi:
+If Redis is present alongside another database, add `redis_data` to volumes:
 ```yaml
 volumes:
   db_data:
   redis_data:
 ```
 
-E aggiungi `redis` come dipendenza dell'app:
+And add `redis` as an app dependency:
 ```yaml
   app:
     depends_on:
@@ -297,251 +297,251 @@ E aggiungi `redis` come dipendenza dell'app:
         condition: service_healthy
 ```
 
-### Note importanti per tutti i servizi database
+### Important Notes for All Database Services
 
-- **Limiti di risorse**: ogni servizio database DEVE avere `memory: 512M` e `cpus: '0.5'` per evitare di consumare troppe risorse sul server.
-- **Rotazione log**: ogni servizio DEVE avere la configurazione di log rotation (`max-size: "10m"`, `max-file: "3"`) per evitare crescita incontrollata dei log.
-- **Healthcheck**: ogni servizio database DEVE avere un healthcheck configurato. L'app DEVE usare `depends_on` con `condition: service_healthy` per attendere che il database sia pronto prima di avviarsi.
-- **Volumi persistenti**: i dati del database sono salvati in volumi Docker per persistere tra i riavvii del container.
+- **Resource limits**: every database service MUST have `memory: 512M` and `cpus: '0.5'` to prevent consuming too many server resources.
+- **Log rotation**: every service MUST have log rotation configured (`max-size: "10m"`, `max-file: "3"`) to prevent uncontrolled log growth.
+- **Healthcheck**: every database service MUST have a healthcheck configured. The app MUST use `depends_on` with `condition: service_healthy` to wait for the database to be ready before starting.
+- **Persistent volumes**: database data is stored in Docker volumes to persist across container restarts.
 
-### Adattamento porte
+### Port Adaptation
 
-La porta interna dell'app nel `docker-compose.yml` deve corrispondere alla porta `EXPOSE` del Dockerfile:
+The app's internal port in `docker-compose.yml` must match the `EXPOSE` port in the Dockerfile:
 - Next.js, Nuxt, SvelteKit, Astro: `3000`
-- Express/Node.js: la porta rilevata nel codice (default `3000`)
+- Express/Node.js: the port detected in the code (default `3000`)
 - FastAPI, Django: `8000`
 
-Sostituisci `3000` negli esempi sopra con la porta corretta.
+Replace `3000` in the examples above with the correct port.
 
-## Passo 4: Generazione start.sh
+## Step 4: start.sh Generation
 
-Genera uno script `start.sh` che gestisce le migrazioni del database prima di avviare l'applicazione.
+Generate a `start.sh` script that handles database migrations before starting the application.
 
-### Template base
+### Base Template
 
 ```bash
 #!/bin/sh
 set -e
 
-echo "Attesa database..."
-# Il healthcheck di Docker Compose gestisce l'attesa,
-# ma aggiungiamo un breve ritardo di sicurezza
+echo "Waiting for database..."
+# Docker Compose healthcheck handles the waiting,
+# but we add a brief safety delay
 sleep 2
 
-echo "Esecuzione migrations..."
-# {comando migrazione in base all'ORM}
+echo "Running migrations..."
+# {migration command based on the ORM}
 
-echo "Avvio applicazione..."
+echo "Starting application..."
 exec {start_command}
 ```
 
-**IMPORTANTE**: usa `exec` prima del comando di avvio per sostituire il processo shell con il processo dell'applicazione. Questo garantisce che i segnali Docker (SIGTERM, etc.) vengano inoltrati correttamente.
+**IMPORTANT**: use `exec` before the start command to replace the shell process with the application process. This ensures Docker signals (SIGTERM, etc.) are forwarded correctly.
 
-### Comandi di migrazione per ORM
+### Migration Commands by ORM
 
 #### Prisma
 
-Se il progetto usa Prisma (presenza di `prisma/schema.prisma` o `@prisma/client` nelle dipendenze):
+If the project uses Prisma (presence of `prisma/schema.prisma` or `@prisma/client` in dependencies):
 
-- **Con cartella `prisma/migrations/` esistente** (migrazioni gia' create):
+- **With existing `prisma/migrations/` folder** (migrations already created):
   ```bash
   npx prisma migrate deploy
   ```
 
-- **Senza cartella `prisma/migrations/`** (primo deploy o sviluppo senza migrazioni):
+- **Without `prisma/migrations/` folder** (first deploy or development without migrations):
   ```bash
   npx prisma db push --skip-generate
   ```
 
-- **Con seed** (se esiste `prisma/seed.ts` o `prisma/seed.js` e il seed e' idempotente):
+- **With seed** (if `prisma/seed.ts` or `prisma/seed.js` exists and the seed is idempotent):
   ```bash
   npx prisma db seed
   ```
-  **Nota**: esegui il seed SOLO se il file di seed e' idempotente (usa `upsert` o `createMany` con `skipDuplicates`). In caso di dubbio, chiedi all'utente.
+  **Note**: run the seed ONLY if the seed file is idempotent (uses `upsert` or `createMany` with `skipDuplicates`). When in doubt, ask the user.
 
-Esempio `start.sh` completo per Prisma con migrazioni:
+Complete `start.sh` example for Prisma with migrations:
 ```bash
 #!/bin/sh
 set -e
-echo "Attesa database..."
+echo "Waiting for database..."
 sleep 2
-echo "Esecuzione migrations Prisma..."
+echo "Running Prisma migrations..."
 npx prisma migrate deploy
-echo "Avvio applicazione..."
+echo "Starting application..."
 exec npm start
 ```
 
 #### Drizzle
 
-Se il progetto usa Drizzle ORM (presenza di `drizzle.config.ts` o `drizzle-orm` nelle dipendenze):
+If the project uses Drizzle ORM (presence of `drizzle.config.ts` or `drizzle-orm` in dependencies):
 
-- **Con cartella `drizzle/` contenente file SQL di migrazione**:
+- **With `drizzle/` folder containing SQL migration files**:
   ```bash
   npx drizzle-kit migrate
   ```
 
-- **Senza migrazioni generate**:
+- **Without generated migrations**:
   ```bash
   npx drizzle-kit push
   ```
 
-Esempio `start.sh` completo per Drizzle:
+Complete `start.sh` example for Drizzle:
 ```bash
 #!/bin/sh
 set -e
-echo "Attesa database..."
+echo "Waiting for database..."
 sleep 2
-echo "Esecuzione migrations Drizzle..."
+echo "Running Drizzle migrations..."
 npx drizzle-kit migrate
-echo "Avvio applicazione..."
+echo "Starting application..."
 exec npm start
 ```
 
 #### Knex
 
-Se il progetto usa Knex (presenza di `knexfile.js` o `knex` nelle dipendenze):
+If the project uses Knex (presence of `knexfile.js` or `knex` in dependencies):
 
 ```bash
 npx knex migrate:latest
 ```
 
-Per eseguire i seed (se presenti nella cartella `seeds/`):
+To run seeds (if present in the `seeds/` folder):
 ```bash
 npx knex seed:run
 ```
 
-Esempio `start.sh` completo per Knex:
+Complete `start.sh` example for Knex:
 ```bash
 #!/bin/sh
 set -e
-echo "Attesa database..."
+echo "Waiting for database..."
 sleep 2
-echo "Esecuzione migrations Knex..."
+echo "Running Knex migrations..."
 npx knex migrate:latest
-echo "Avvio applicazione..."
+echo "Starting application..."
 exec npm start
 ```
 
 #### TypeORM
 
-Se il progetto usa TypeORM (presenza di `data-source.ts` o `data-source.js` o `typeorm` nelle dipendenze):
+If the project uses TypeORM (presence of `data-source.ts` or `data-source.js` or `typeorm` in dependencies):
 
-**IMPORTANTE**: in produzione (dentro il container Docker), `ts-node` non e' installato (e' una devDependency). Se il progetto usa TypeScript, il file `data-source.ts` viene compilato in `dist/data-source.js` durante il build. Usa il file JS compilato:
+**IMPORTANT**: in production (inside the Docker container), `ts-node` is not installed (it's a devDependency). If the project uses TypeScript, the `data-source.ts` file is compiled to `dist/data-source.js` during the build. Use the compiled JS file:
 
-- **Progetto TypeScript** (ha `tsconfig.json` e build step):
+- **TypeScript project** (has `tsconfig.json` and build step):
   ```bash
   npx typeorm migration:run -d dist/data-source.js
   ```
 
-- **Progetto JavaScript** (nessun build step):
+- **JavaScript project** (no build step):
   ```bash
   npx typeorm migration:run -d data-source.js
   ```
 
-Se il file data-source ha un nome o percorso diverso, adattarlo di conseguenza.
+If the data-source file has a different name or path, adjust accordingly.
 
-Esempio `start.sh` completo per TypeORM (progetto TypeScript):
+Complete `start.sh` example for TypeORM (TypeScript project):
 ```bash
 #!/bin/sh
 set -e
-echo "Attesa database..."
+echo "Waiting for database..."
 sleep 2
-echo "Esecuzione migrations TypeORM..."
+echo "Running TypeORM migrations..."
 npx typeorm migration:run -d dist/data-source.js
-echo "Avvio applicazione..."
+echo "Starting application..."
 exec npm start
 ```
 
 #### Sequelize
 
-Se il progetto usa Sequelize (presenza di `.sequelizerc` o `sequelize` nelle dipendenze):
+If the project uses Sequelize (presence of `.sequelizerc` or `sequelize` in dependencies):
 
 ```bash
 npx sequelize-cli db:migrate
 ```
 
-Per eseguire i seed (se presenti):
+To run seeds (if present):
 ```bash
 npx sequelize-cli db:seed:all
 ```
 
-Esempio `start.sh` completo per Sequelize:
+Complete `start.sh` example for Sequelize:
 ```bash
 #!/bin/sh
 set -e
-echo "Attesa database..."
+echo "Waiting for database..."
 sleep 2
-echo "Esecuzione migrations Sequelize..."
+echo "Running Sequelize migrations..."
 npx sequelize-cli db:migrate
-echo "Avvio applicazione..."
+echo "Starting application..."
 exec npm start
 ```
 
 #### Django (Python)
 
-Se il progetto e' Django:
+If the project is Django:
 
 ```bash
 python manage.py migrate
 ```
 
-Per eseguire i seed/fixtures (se presenti):
+To run seeds/fixtures (if present):
 ```bash
 python manage.py loaddata {fixture_file}
 ```
 
-Esempio `start.sh` completo per Django:
+Complete `start.sh` example for Django:
 ```bash
 #!/bin/sh
 set -e
-echo "Attesa database..."
+echo "Waiting for database..."
 sleep 2
-echo "Esecuzione migrations Django..."
+echo "Running Django migrations..."
 python manage.py migrate
-echo "Avvio applicazione..."
+echo "Starting application..."
 exec gunicorn {project_name}.wsgi:application --bind 0.0.0.0:8000
 ```
 
 #### SQLAlchemy / Alembic (Python)
 
-Se il progetto usa Alembic (presenza di `alembic.ini` o cartella `alembic/`):
+If the project uses Alembic (presence of `alembic.ini` or `alembic/` folder):
 
 ```bash
 alembic upgrade head
 ```
 
-Esempio `start.sh` completo per Alembic:
+Complete `start.sh` example for Alembic:
 ```bash
 #!/bin/sh
 set -e
-echo "Attesa database..."
+echo "Waiting for database..."
 sleep 2
-echo "Esecuzione migrations Alembic..."
+echo "Running Alembic migrations..."
 alembic upgrade head
-echo "Avvio applicazione..."
+echo "Starting application..."
 exec uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-### Aggiornamento Dockerfile
+### Dockerfile Update
 
-Dopo aver generato `start.sh`, aggiorna il Dockerfile:
+After generating `start.sh`, update the Dockerfile:
 
-1. Aggiungi la copia di `start.sh`:
+1. Add the copy of `start.sh`:
    ```dockerfile
    COPY start.sh .
    RUN chmod +x start.sh
    ```
 
-2. Sostituisci il `CMD` originale:
+2. Replace the original `CMD`:
    ```dockerfile
    CMD ["./start.sh"]
    ```
 
 ### SQLite in Docker
 
-Se il database e' SQLite:
-- NON aggiungere un servizio database al `docker-compose.yml`
-- Aggiungi un volume per persistere il file SQLite:
+If the database is SQLite:
+- Do NOT add a database service to `docker-compose.yml`
+- Add a volume to persist the SQLite file:
   ```yaml
   services:
     app:
@@ -567,64 +567,64 @@ Se il database e' SQLite:
   volumes:
     sqlite_data:
   ```
-- Assicurati che il percorso del file SQLite nel codice punti a `/app/data/` (o la cartella montata).
-- Imposta `DATABASE_URL=file:/app/data/{project_name}.db` nel `.env.production`.
-- Le migrazioni funzionano normalmente (Prisma, Drizzle, etc.) — non serve attendere il database.
+- Make sure the SQLite file path in the code points to `/app/data/` (or the mounted folder).
+- Set `DATABASE_URL=file:/app/data/{project_name}.db` in `.env.production`.
+- Migrations work normally (Prisma, Drizzle, etc.) — no need to wait for the database.
 
-## Passo 5: Variabili d'ambiente per il database
+## Step 5: Database Environment Variables
 
-Aggiungi le seguenti variabili al file `.env.production` (generato in `docker.md` Passo 6):
+Add the following variables to the `.env.production` file (generated in `docker.md` Step 6):
 
-### Per PostgreSQL
+### For PostgreSQL
 ```
-DB_PASSWORD={password_generata}
+DB_PASSWORD={generated_password}
 PROJECT_NAME={project_name}
-DATABASE_URL=postgresql://app:{password_generata}@db:5432/{project_name}
+DATABASE_URL=postgresql://app:{generated_password}@db:5432/{project_name}
 ```
 
-### Per MySQL
+### For MySQL
 ```
-DB_PASSWORD={password_generata}
-DB_ROOT_PASSWORD={root_password_generata}
+DB_PASSWORD={generated_password}
+DB_ROOT_PASSWORD={generated_root_password}
 PROJECT_NAME={project_name}
-DATABASE_URL=mysql://app:{password_generata}@db:3306/{project_name}
+DATABASE_URL=mysql://app:{generated_password}@db:3306/{project_name}
 ```
 
-### Per MongoDB
+### For MongoDB
 ```
-DB_PASSWORD={password_generata}
+DB_PASSWORD={generated_password}
 PROJECT_NAME={project_name}
-MONGODB_URI=mongodb://app:{password_generata}@db:27017/{project_name}?authSource=admin
+MONGODB_URI=mongodb://app:{generated_password}@db:27017/{project_name}?authSource=admin
 ```
 
-### Per Redis
+### For Redis
 ```
 REDIS_URL=redis://redis:6379
 ```
 
-### Per SQLite
+### For SQLite
 ```
 DATABASE_URL=file:/app/data/{project_name}.db
 ```
 
-### Combinazioni
+### Combinations
 
-Se il progetto usa sia un database relazionale che Redis, includi TUTTE le variabili d'ambiente corrispondenti.
+If the project uses both a relational database and Redis, include ALL corresponding environment variables.
 
-Esempio con PostgreSQL + Redis:
+Example with PostgreSQL + Redis:
 ```
-DB_PASSWORD={password_generata}
+DB_PASSWORD={generated_password}
 PROJECT_NAME={project_name}
-DATABASE_URL=postgresql://app:{password_generata}@db:5432/{project_name}
+DATABASE_URL=postgresql://app:{generated_password}@db:5432/{project_name}
 REDIS_URL=redis://redis:6379
 ```
 
-## Riepilogo flusso
+## Flow Summary
 
-1. Genera password con `openssl rand -hex 24`
-2. Crea file `.env` per l'interpolazione di Docker Compose (con `DB_PASSWORD`, `PROJECT_NAME`, etc.)
-3. Genera `docker-compose.yml` con servizio app + servizio database (con healthcheck, resource limits, log rotation)
-4. Genera `start.sh` con comandi di migrazione appropriati per l'ORM rilevato
-5. Aggiungi variabili d'ambiente database a `.env.production`
-6. Aggiorna Dockerfile per usare `start.sh`
-7. Prosegui con Passo 7 di `docker.md` (Git init e push)
+1. Generate password with `openssl rand -hex 24`
+2. Create `.env` file for Docker Compose interpolation (with `DB_PASSWORD`, `PROJECT_NAME`, etc.)
+3. Generate `docker-compose.yml` with app service + database service (with healthcheck, resource limits, log rotation)
+4. Generate `start.sh` with appropriate migration commands for the detected ORM
+5. Add database environment variables to `.env.production`
+6. Update Dockerfile to use `start.sh`
+7. Continue with Step 7 of `docker.md` (Git init and push)

@@ -1,36 +1,36 @@
-# Deploy Statico
+# Static Deploy
 
-Questa guida copre il deploy di siti statici (HTML, CSS, JS). Il progetto viene buildato localmente e la cartella di output viene pushata su un branch `deploy` del repository Gitea.
+This guide covers the deployment of static sites (HTML, CSS, JS). The project is built locally and the output folder is pushed to a `deploy` branch of the Gitea repository.
 
-## Prerequisiti
+## Prerequisites
 
-Leggi `~/.deploy-config.json` per ottenere le seguenti variabili:
+Read `~/.deploy-config.json` to get the following variables:
 
-- `{GITEA_URL}` → campo `gitea_url`
-- `{USER_TOKEN}` → campo `gitea_token`
-- `{DOMINIO}` → campo `domain`
-- `{WEBHOOK_URL}` → campo `webhook_url`
-- `{DEPLOY_TOKEN}` → campo `deploy_token`
-- `{username}` → campo `gitea_username`
+- `{GITEA_URL}` → field `gitea_url`
+- `{USER_TOKEN}` → field `gitea_token`
+- `{DOMAIN}` → field `domain`
+- `{WEBHOOK_URL}` → field `webhook_url`
+- `{DEPLOY_TOKEN}` → field `deploy_token`
+- `{username}` → field `gitea_username`
 
-## Passo 1: Nome progetto
+## Step 1: Project Name
 
-Chiedi all'utente il nome del progetto. Suggerisci un nome derivato dalla cartella corrente (es. se la cartella si chiama `my-app`, suggerisci `my-app`).
+Ask the user for the project name. Suggest a name derived from the current folder (e.g., if the folder is called `my-app`, suggest `my-app`).
 
-### Validazione del nome
+### Name Validation
 
-Il nome DEVE rispettare tutte queste regole:
+The name MUST comply with all these rules:
 
-- Solo caratteri `[a-z0-9-]` (minuscole, numeri, trattini)
-- Lunghezza massima: 63 caratteri
-- NON puo' iniziare con un trattino `-`
-- NON puo' terminare con un trattino `-`
+- Only characters `[a-z0-9-]` (lowercase, numbers, hyphens)
+- Maximum length: 63 characters
+- CANNOT start with a hyphen `-`
+- CANNOT end with a hyphen `-`
 
-Se il nome non e' valido, chiedi all'utente di sceglierne un altro spiegando quali regole ha violato.
+If the name is not valid, ask the user to choose another one explaining which rules were violated.
 
-### Verifica disponibilita'
+### Availability Check
 
-Dopo la validazione, verifica che il nome non sia gia' in uso:
+After validation, verify the name is not already in use:
 
 ```bash
 curl -s -o /dev/null -w "%{http_code}" \
@@ -38,111 +38,111 @@ curl -s -o /dev/null -w "%{http_code}" \
     "{GITEA_URL}/api/v1/repos/{username}/{project_name}"
 ```
 
-- Se risponde `200` → il progetto esiste gia'. Chiedi all'utente se vuole sovrascriverlo (re-deploy) o scegliere un altro nome.
-- Se risponde `404` → il nome e' disponibile, prosegui.
+- If it responds `200` → the project already exists. Ask the user if they want to overwrite it (re-deploy) or choose another name.
+- If it responds `404` → the name is available, proceed.
 
-## Passo 2: Installa dipendenze
+## Step 2: Install Dependencies
 
-Rileva il package manager dal lockfile presente nella root del progetto e installa le dipendenze:
+Detect the package manager from the lockfile present in the project root and install dependencies:
 
-| Lockfile presente | Comando |
+| Lockfile present | Command |
 |---|---|
 | `package-lock.json` | `npm install` |
 | `yarn.lock` | `yarn install` |
 | `pnpm-lock.yaml` | `pnpm install` |
 
-Se nessun lockfile e' presente ma esiste `package.json`, usa `npm install`.
+If no lockfile is present but `package.json` exists, use `npm install`.
 
-Se non esiste nemmeno `package.json` (es. HTML puro), salta questo passo.
+If `package.json` doesn't exist either (e.g., pure HTML), skip this step.
 
-## Passo 3: Build
+## Step 3: Build
 
-Esegui il comando di build appropriato in base al framework rilevato dall'analisi.
+Run the appropriate build command based on the framework detected by the analysis.
 
-### Tabella build per framework
+### Build Table by Framework
 
-| Framework | Comando build | Output directory |
+| Framework | Build command | Output directory |
 |---|---|---|
-| Next.js (statico) | `npx next build` (con `output: 'export'`) | `out/` |
+| Next.js (static) | `npx next build` (with `output: 'export'`) | `out/` |
 | React (Vite) | `npm run build` | `dist/` |
 | React (CRA) | `npm run build` | `build/` |
 | Gatsby | `npx gatsby build` | `public/` |
-| Astro (statico) | `npm run build` | `dist/` |
+| Astro (static) | `npm run build` | `dist/` |
 | Vue (Vite) | `npm run build` | `dist/` |
-| Angular | `npm run build` | `dist/{nome-progetto}/` |
-| SvelteKit (statico) | `npm run build` | `build/` |
-| HTML puro | Nessun build | `.` (root) |
+| Angular | `npm run build` | `dist/{project-name}/` |
+| SvelteKit (static) | `npm run build` | `build/` |
+| Pure HTML | No build | `.` (root) |
 
-### Note specifiche per framework
+### Framework-Specific Notes
 
-#### Next.js statico
+#### Static Next.js
 
-Per Next.js in modalita' statica, e' necessario che `next.config.js` (o `next.config.mjs` o `next.config.ts`) contenga `output: 'export'`.
+For Next.js in static mode, `next.config.js` (or `next.config.mjs` or `next.config.ts`) must contain `output: 'export'`.
 
-Controlla il file di configurazione:
-- Se `output: 'export'` e' gia' presente → procedi con il build.
-- Se `output: 'export'` NON e' presente → aggiungilo automaticamente al file di configurazione prima del build.
+Check the configuration file:
+- If `output: 'export'` is already present → proceed with the build.
+- If `output: 'export'` is NOT present → add it automatically to the configuration file before building.
 
-Esempio di modifica per `next.config.js`:
+Example modification for `next.config.js`:
 ```js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     output: 'export',
-    // ...altre configurazioni esistenti
+    // ...other existing configurations
 }
 module.exports = nextConfig
 ```
 
-Esempio di modifica per `next.config.mjs`:
+Example modification for `next.config.mjs`:
 ```js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     output: 'export',
-    // ...altre configurazioni esistenti
+    // ...other existing configurations
 }
 export default nextConfig
 ```
 
-#### Variabili d'ambiente a build time
+#### Build-Time Environment Variables
 
-Alcune variabili d'ambiente devono essere presenti al momento del build perche' vengono incorporate nel codice statico generato:
+Some environment variables must be present at build time because they are embedded in the generated static code:
 
-- `NEXT_PUBLIC_*` — variabili pubbliche Next.js
-- `VITE_*` — variabili pubbliche Vite
-- `REACT_APP_*` — variabili pubbliche Create React App
+- `NEXT_PUBLIC_*` — Next.js public variables
+- `VITE_*` — Vite public variables
+- `REACT_APP_*` — Create React App public variables
 
-Se il report dell'analisi contiene `env_vars` con variabili che corrispondono a questi pattern:
-1. Chiedi all'utente i valori di queste variabili
-2. Impostale come variabili d'ambiente PRIMA di eseguire il build
+If the analysis report contains `env_vars` with variables matching these patterns:
+1. Ask the user for the values of these variables
+2. Set them as environment variables BEFORE running the build
 
 ```bash
-export VITE_API_URL="valore-fornito-dall-utente"
+export VITE_API_URL="value-provided-by-user"
 npm run build
 ```
 
-### Verifica build
+### Build Verification
 
-Dopo il build, verifica che la directory di output esista e contenga almeno un file:
+After the build, verify that the output directory exists and contains at least one file:
 
 ```bash
 ls {output_dir}
 ```
 
-Se la directory non esiste o e' vuota, il build e' fallito. Mostra l'errore all'utente e interrompi il processo.
+If the directory doesn't exist or is empty, the build failed. Show the error to the user and stop the process.
 
-## Passo 4: Git init e push
+## Step 4: Git Init and Push
 
-### 4.1: Inizializza repository git
+### 4.1: Initialize Git Repository
 
-Se la cartella NON e' gia' un repository git (non esiste `.git/`):
+If the folder is NOT already a git repository (`.git/` doesn't exist):
 
 ```bash
 git init
 ```
 
-### 4.2: Crea .gitignore
+### 4.2: Create .gitignore
 
-Se non esiste gia' un `.gitignore`, creane uno appropriato:
+If a `.gitignore` doesn't already exist, create an appropriate one:
 
 ```
 node_modules/
@@ -160,18 +160,18 @@ dist/
 build/
 ```
 
-Se `.gitignore` esiste gia', verifica che contenga almeno `node_modules` e `.env`. Se mancano, aggiungili.
+If `.gitignore` already exists, verify it contains at least `node_modules` and `.env`. If missing, add them.
 
-### 4.3: Commit sorgente su main
+### 4.3: Commit Source to Main
 
 ```bash
 git add -A
 git commit -m "deploy: {project_name} via Prolato"
 ```
 
-Se il commit fallisce perche' non ci sono modifiche, ignora l'errore e prosegui.
+If the commit fails because there are no changes, ignore the error and continue.
 
-### 4.4: Crea repository Gitea
+### 4.4: Create Gitea Repository
 
 ```bash
 curl -s -X POST "{GITEA_URL}/api/v1/user/repos" \
@@ -184,48 +184,48 @@ curl -s -X POST "{GITEA_URL}/api/v1/user/repos" \
     }'
 ```
 
-Se il repository esiste gia' (errore 409), prosegui senza errore.
+If the repository already exists (error 409), continue without error.
 
-### 4.5: Aggiungi remote
+### 4.5: Add Remote
 
-Controlla se esiste gia' un remote `origin`:
+Check if an `origin` remote already exists:
 
 ```bash
 git remote get-url origin 2>/dev/null
 ```
 
-- Se `origin` NON esiste → aggiungi come `origin`:
+- If `origin` does NOT exist → add as `origin`:
   ```bash
-  git remote add origin git@git.{DOMINIO}:{username}/{project_name}.git
+  git remote add origin git@git.{DOMAIN}:{username}/{project_name}.git
   ```
 
-- Se `origin` ESISTE GIA' (e punta a un altro URL) → aggiungi come `deploy`:
+- If `origin` ALREADY EXISTS (and points to a different URL) → add as `deploy`:
   ```bash
-  git remote add deploy git@git.{DOMINIO}:{username}/{project_name}.git
+  git remote add deploy git@git.{DOMAIN}:{username}/{project_name}.git
   ```
-  In questo caso, usa `deploy` al posto di `origin` in tutti i comandi successivi.
+  In this case, use `deploy` instead of `origin` in all subsequent commands.
 
-Se il remote esiste gia' e punta allo stesso URL, non fare nulla.
+If the remote already exists and points to the same URL, do nothing.
 
-### 4.6: Push sorgente su main
+### 4.6: Push Source to Main
 
 ```bash
 git push -u {remote_name} main
 ```
 
-Dove `{remote_name}` e' `origin` o `deploy` (in base al passo 4.5).
+Where `{remote_name}` is `origin` or `deploy` (based on step 4.5).
 
-NON usare `--force` per il push su main.
+Do NOT use `--force` for pushing to main.
 
-### 4.7: Push output su branch deploy
+### 4.7: Push Output to Deploy Branch
 
-Usa `git subtree` per pushare SOLO la cartella di output sul branch `deploy`:
+Use `git subtree` to push ONLY the output folder to the `deploy` branch:
 
 ```bash
 git subtree push --prefix {output_dir} {remote_name} deploy
 ```
 
-Se il subtree push fallisce (es. branch `deploy` gia' esistente con storia diversa), usa il metodo alternativo:
+If the subtree push fails (e.g., `deploy` branch already exists with different history), use the alternative method:
 
 ```bash
 git subtree split --prefix {output_dir} -b deploy-temp
@@ -233,17 +233,17 @@ git push {remote_name} deploy-temp:deploy --force
 git branch -D deploy-temp
 ```
 
-**IMPORTANTE**: `--force` e' consentito SOLO per il branch `deploy`, MAI per `main`.
+**IMPORTANT**: `--force` is allowed ONLY for the `deploy` branch, NEVER for `main`.
 
-Per HTML puro (output_dir = `.`), non usare subtree. Invece, pusha direttamente:
+For pure HTML (output_dir = `.`), don't use subtree. Instead, push directly:
 
 ```bash
 git push -u {remote_name} main:deploy --force
 ```
 
-## Passo 5: Trigger webhook
+## Step 5: Trigger Webhook
 
-Invia la richiesta di deploy al server webhook:
+Send the deploy request to the webhook server:
 
 ```bash
 curl -s -X POST "{WEBHOOK_URL}/deploy" \
@@ -251,35 +251,35 @@ curl -s -X POST "{WEBHOOK_URL}/deploy" \
     -H "Content-Type: application/json" \
     -d '{
         "project_name": "{project_name}",
-        "git_repo_url": "git@git.{DOMINIO}:{username}/{project_name}.git",
+        "git_repo_url": "git@git.{DOMAIN}:{username}/{project_name}.git",
         "branch": "deploy",
         "deploy_type": "static",
         "owner": "{username}"
     }'
 ```
 
-Verifica la risposta:
-- Se `status` e' `success` o il codice HTTP e' `200`/`201` → deploy avviato con successo.
-- Se errore → mostra il messaggio di errore all'utente.
+Verify the response:
+- If `status` is `success` or HTTP code is `200`/`201` → deploy started successfully.
+- If error → show the error message to the user.
 
-## Passo 6: Verifica e output
+## Step 6: Verify and Output
 
-Attendi qualche secondo e verifica che il sito sia raggiungibile:
+Wait a few seconds and verify the site is reachable:
 
 ```bash
-curl -s -o /dev/null -w "%{http_code}" "https://{project_name}.{DOMINIO}"
+curl -s -o /dev/null -w "%{http_code}" "https://{project_name}.{DOMAIN}"
 ```
 
-Mostra all'utente il risultato finale:
+Show the user the final result:
 
 ```
-Deploy completato con successo!
+Deploy completed successfully!
 
-URL del sito: https://{project_name}.{DOMINIO}
-Repository:   {GITEA_URL}/{username}/{project_name}
+Site URL:    https://{project_name}.{DOMAIN}
+Repository:  {GITEA_URL}/{username}/{project_name}
 
-Il sito e' ora raggiungibile all'URL indicato.
-Per aggiornare il sito, esegui di nuovo il deploy con Prolato.
+The site is now reachable at the URL above.
+To update the site, run the deploy again with Prolato.
 ```
 
-Se il sito non e' ancora raggiungibile, informa l'utente che il deploy potrebbe richiedere qualche minuto per propagarsi e che l'URL sara' presto attivo.
+If the site is not yet reachable, inform the user that the deploy may take a few minutes to propagate and the URL will be active soon.

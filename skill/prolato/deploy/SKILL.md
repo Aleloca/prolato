@@ -1,14 +1,14 @@
 ---
 name: prolato-deploy
-description: Esegue il deploy del progetto in base al report dell'analisi
+description: Execute the project deploy based on the analysis report
 ---
 
 # Deploy
 
-## Flusso
+## Flow
 
-1. Leggi il report dell'analisi
-2. Se `deploy_strategy == "static"` → leggi e segui `static.md`
-3. Se `deploy_strategy == "docker"` → leggi e segui `docker.md`
-   - Se `database` presente → leggi e segui anche `database.md`
-4. Restituisci URL all'utente
+1. Read the analysis report
+2. If `deploy_strategy == "static"` → read and follow `static.md`
+3. If `deploy_strategy == "docker"` → read and follow `docker.md`
+   - If `database` is present → also read and follow `database.md`
+4. Return URL to the user

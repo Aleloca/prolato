@@ -1,36 +1,36 @@
-# Deploy Docker
+# Docker Deploy
 
-Questa guida copre il deploy di progetti che necessitano di un server (SSR, backend, API). Il progetto viene containerizzato con Docker e deployato tramite il webhook.
+This guide covers the deployment of projects that need a server (SSR, backend, API). The project is containerized with Docker and deployed via the webhook.
 
-## Prerequisiti
+## Prerequisites
 
-Leggi `~/.deploy-config.json` per ottenere le seguenti variabili:
+Read `~/.deploy-config.json` to get the following variables:
 
-- `{GITEA_URL}` → campo `gitea_url`
-- `{USER_TOKEN}` → campo `gitea_token`
-- `{DOMINIO}` → campo `domain`
-- `{WEBHOOK_URL}` → campo `webhook_url`
-- `{DEPLOY_TOKEN}` → campo `deploy_token`
-- `{username}` → campo `gitea_username`
+- `{GITEA_URL}` → field `gitea_url`
+- `{USER_TOKEN}` → field `gitea_token`
+- `{DOMAIN}` → field `domain`
+- `{WEBHOOK_URL}` → field `webhook_url`
+- `{DEPLOY_TOKEN}` → field `deploy_token`
+- `{username}` → field `gitea_username`
 
-## Passo 1: Nome progetto
+## Step 1: Project Name
 
-Chiedi all'utente il nome del progetto. Suggerisci un nome derivato dalla cartella corrente (es. se la cartella si chiama `my-app`, suggerisci `my-app`).
+Ask the user for the project name. Suggest a name derived from the current folder (e.g., if the folder is called `my-app`, suggest `my-app`).
 
-### Validazione del nome
+### Name Validation
 
-Il nome DEVE rispettare tutte queste regole:
+The name MUST comply with all these rules:
 
-- Solo caratteri `[a-z0-9-]` (minuscole, numeri, trattini)
-- Lunghezza massima: 63 caratteri
-- NON puo' iniziare con un trattino `-`
-- NON puo' terminare con un trattino `-`
+- Only characters `[a-z0-9-]` (lowercase, numbers, hyphens)
+- Maximum length: 63 characters
+- CANNOT start with a hyphen `-`
+- CANNOT end with a hyphen `-`
 
-Se il nome non e' valido, chiedi all'utente di sceglierne un altro spiegando quali regole ha violato.
+If the name is not valid, ask the user to choose another one explaining which rules were violated.
 
-### Verifica disponibilita'
+### Availability Check
 
-Dopo la validazione, verifica che il nome non sia gia' in uso:
+After validation, verify the name is not already in use:
 
 ```bash
 curl -s -o /dev/null -w "%{http_code}" \
@@ -38,16 +38,16 @@ curl -s -o /dev/null -w "%{http_code}" \
     "{GITEA_URL}/api/v1/repos/{username}/{project_name}"
 ```
 
-- Se risponde `200` → il progetto esiste gia'. Chiedi all'utente se vuole sovrascriverlo (re-deploy) o scegliere un altro nome.
-- Se risponde `404` → il nome e' disponibile, prosegui.
+- If it responds `200` → the project already exists. Ask the user if they want to overwrite it (re-deploy) or choose another name.
+- If it responds `404` → the name is available, proceed.
 
-## Passo 2: Generazione Dockerfile
+## Step 2: Dockerfile Generation
 
-Se il progetto NON ha gia' un `Dockerfile`, generane uno in base al framework rilevato dall'analisi.
+If the project does NOT already have a `Dockerfile`, generate one based on the framework detected by the analysis.
 
-### Next.js SSR (con output standalone)
+### Next.js SSR (with standalone output)
 
-Prima di generare il Dockerfile, assicurati che `next.config.js` (o `.mjs`/`.ts`) contenga `output: 'standalone'`. Se non e' presente, aggiungilo.
+Before generating the Dockerfile, make sure `next.config.js` (or `.mjs`/`.ts`) contains `output: 'standalone'`. If not present, add it.
 
 ```dockerfile
 FROM node:20-alpine AS builder
@@ -68,9 +68,9 @@ ENV PORT=3000
 CMD ["node", "server.js"]
 ```
 
-**Nota**: lo stage `builder` installa TUTTE le dipendenze (incluse le devDependencies come `next`) perche' sono necessarie per il build. Lo stage `runner` copia solo l'output `standalone`, che include gia' le dipendenze di produzione necessarie, riducendo la dimensione dell'immagine finale.
+**Note**: the `builder` stage installs ALL dependencies (including devDependencies like `next`) because they are needed for the build. The `runner` stage copies only the `standalone` output, which already includes the necessary production dependencies, reducing the final image size.
 
-### Express / Node.js backend
+### Express / Node.js Backend
 
 ```dockerfile
 FROM node:{NODE_VERSION}-alpine
@@ -82,12 +82,12 @@ EXPOSE {PORT}
 CMD ["node", "{entry_file}"]
 ```
 
-Dove:
-- `{NODE_VERSION}` → dalla campo `node_version` del report (default: `20`)
-- `{PORT}` → la porta rilevata nel codice (default: `3000`)
-- `{entry_file}` → il file di ingresso (es. `server.js`, `index.js`, `app.js`)
+Where:
+- `{NODE_VERSION}` → from the `node_version` field of the report (default: `20`)
+- `{PORT}` → the port detected in the code (default: `3000`)
+- `{entry_file}` → the entry file (e.g., `server.js`, `index.js`, `app.js`)
 
-Se il progetto ha un comando `build` in `package.json` (es. per TypeScript), aggiungi uno stage di build:
+If the project has a `build` command in `package.json` (e.g., for TypeScript), add a build stage:
 
 ```dockerfile
 FROM node:{NODE_VERSION}-alpine AS builder
@@ -118,9 +118,9 @@ EXPOSE 8000
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
-Note:
-- Se il file principale non si chiama `main.py`, adatta il comando `uvicorn` (es. `app.main:app`).
-- Se esiste `pyproject.toml` con dipendenze Poetry, usa:
+Notes:
+- If the main file is not called `main.py`, adjust the `uvicorn` command (e.g., `app.main:app`).
+- If `pyproject.toml` exists with Poetry dependencies, use:
   ```dockerfile
   RUN pip install poetry && poetry config virtualenvs.create false && poetry install --no-dev
   ```
@@ -138,7 +138,7 @@ EXPOSE 8000
 CMD ["gunicorn", "{project_name}.wsgi:application", "--bind", "0.0.0.0:8000"]
 ```
 
-Dove `{project_name}` e' il nome del modulo Django (la cartella che contiene `wsgi.py`).
+Where `{project_name}` is the Django module name (the folder containing `wsgi.py`).
 
 ### Nuxt.js SSR
 
@@ -179,7 +179,7 @@ ENV PORT=3000
 CMD ["node", "build"]
 ```
 
-**Nota**: a differenza di Next.js standalone, l'output di SvelteKit con `adapter-node` richiede `node_modules` a runtime. E' necessario installare le dipendenze di produzione nello stage runner.
+**Note**: unlike Next.js standalone, the SvelteKit output with `adapter-node` requires `node_modules` at runtime. Production dependencies must be installed in the runner stage.
 
 ### Astro SSR
 
@@ -201,20 +201,20 @@ ENV HOST=0.0.0.0
 CMD ["node", "./dist/server/entry.mjs"]
 ```
 
-**Nota**: Astro usa la porta 4321 in sviluppo, ma in produzione usiamo la porta 3000 per coerenza con gli altri framework e con il template `docker-compose.yml` (che usa `${APP_PORT:-3000}:3000` come default). La variabile `PORT=3000` viene letta da Astro SSR per il binding.
+**Note**: Astro uses port 4321 in development, but in production we use port 3000 for consistency with other frameworks and with the `docker-compose.yml` template (which uses `${APP_PORT:-3000}:3000` as default). The `PORT=3000` variable is read by Astro SSR for binding.
 
-### Se il Dockerfile esiste gia'
+### If the Dockerfile Already Exists
 
-Se il progetto ha gia' un `Dockerfile`, NON sovrascriverlo. Mostra il contenuto all'utente e chiedi conferma:
+If the project already has a `Dockerfile`, do NOT overwrite it. Show the contents to the user and ask for confirmation:
 
-- Se l'utente conferma → usa il Dockerfile esistente.
-- Se l'utente vuole modificarlo → applica le modifiche richieste.
+- If the user confirms → use the existing Dockerfile.
+- If the user wants to modify it → apply the requested changes.
 
-## Passo 3: Generazione docker-compose.yml
+## Step 3: docker-compose.yml Generation
 
-Se il report dell'analisi indica che `database` e' presente (non `null`), la generazione del `docker-compose.yml` completo e' delegata a `database.md`. In quel caso, salta questo passo e segui `database.md`.
+If the analysis report indicates that `database` is present (not `null`), the generation of the complete `docker-compose.yml` is delegated to `database.md`. In that case, skip this step and follow `database.md`.
 
-Se `database` e' `null`, genera un `docker-compose.yml` base:
+If `database` is `null`, generate a basic `docker-compose.yml`:
 
 ```yaml
 services:
@@ -237,15 +237,15 @@ services:
         max-file: "3"
 ```
 
-Note:
-- La porta interna (dopo i `:`) deve corrispondere alla porta `EXPOSE` del Dockerfile.
-- La porta esterna usa la variabile `APP_PORT` con default `3000`.
-- I **limiti di risorse** (`memory: 512M`, `cpus: '0.5'`) sono obbligatori per evitare che un singolo container consumi troppe risorse sul server.
-- La **rotazione dei log** (`max-size: "10m"`, `max-file: "3"`) e' obbligatoria per evitare che i log crescano indefinitamente.
+Notes:
+- The internal port (after the `:`) must match the `EXPOSE` port in the Dockerfile.
+- The external port uses the `APP_PORT` variable with default `3000`.
+- **Resource limits** (`memory: 512M`, `cpus: '0.5'`) are mandatory to prevent a single container from consuming too many server resources.
+- **Log rotation** (`max-size: "10m"`, `max-file: "3"`) is mandatory to prevent logs from growing indefinitely.
 
-## Passo 4: Generazione .dockerignore
+## Step 4: .dockerignore Generation
 
-Crea un file `.dockerignore` per escludere file non necessari dall'immagine Docker:
+Create a `.dockerignore` file to exclude unnecessary files from the Docker image:
 
 ```
 node_modules
@@ -260,71 +260,71 @@ build
 out
 ```
 
-Adatta il contenuto in base al framework:
-- Per Python aggiungi: `__pycache__`, `*.pyc`, `.venv`, `venv`
-- Per progetti con `.next`, mantieni `.next` nel `.dockerignore` (verra' ricostruito nel build Docker)
+Adapt the contents based on the framework:
+- For Python add: `__pycache__`, `*.pyc`, `.venv`, `venv`
+- For projects with `.next`, keep `.next` in `.dockerignore` (it will be rebuilt in the Docker build)
 
-## Passo 5: Generazione start.sh
+## Step 5: start.sh Generation
 
-Se il report dell'analisi indica che `database` e' presente, genera un file `start.sh` con i comandi di migrazione. I dettagli su quali comandi di migrazione usare sono descritti in `database.md`.
+If the analysis report indicates that `database` is present, generate a `start.sh` file with migration commands. The details of which migration commands to use are described in `database.md`.
 
-Se `database` non e' presente, questo passo non e' necessario (il container usa direttamente il `CMD` del Dockerfile).
+If `database` is not present, this step is not necessary (the container uses the Dockerfile `CMD` directly).
 
-Se `start.sh` viene generato, assicurati che:
-1. Il file sia eseguibile: `chmod +x start.sh`
-2. Il `CMD` del Dockerfile punti a `start.sh` invece del comando diretto:
+If `start.sh` is generated, make sure that:
+1. The file is executable: `chmod +x start.sh`
+2. The Dockerfile `CMD` points to `start.sh` instead of the direct command:
    ```dockerfile
    CMD ["./start.sh"]
    ```
 
-## Passo 6: Generazione .env.production
+## Step 6: .env.production Generation
 
-Raccogli tutte le variabili d'ambiente necessarie dal report dell'analisi (campo `env_vars`) e genera il file `.env.production`.
+Collect all necessary environment variables from the analysis report (`env_vars` field) and generate the `.env.production` file.
 
-### Regole
+### Rules
 
-1. **Chiedi i valori all'utente** per ogni variabile d'ambiente rilevata, TRANNE:
-   - `DATABASE_URL` / `MONGODB_URI` / `REDIS_URL` → generati automaticamente (vedi `database.md`)
-   - `PORT` → deve corrispondere alla porta `EXPOSE` del Dockerfile
-   - `NODE_ENV` → impostato a `production`
-   - `DB_PASSWORD` → generato automaticamente (vedi sotto)
+1. **Ask the user for values** for each detected environment variable, EXCEPT:
+   - `DATABASE_URL` / `MONGODB_URI` / `REDIS_URL` → generated automatically (see `database.md`)
+   - `PORT` → must match the `EXPOSE` port in the Dockerfile
+   - `NODE_ENV` → set to `production`
+   - `DB_PASSWORD` → generated automatically (see below)
 
-2. **Genera password automaticamente** per il database:
+2. **Generate passwords automatically** for the database:
    ```bash
    openssl rand -hex 24
    ```
-   La password viene salvata SOLO nel file `.env.production` e non viene mai mostrata all'utente.
+   The password is saved ONLY in the `.env.production` file and is never shown to the user.
 
-3. **DATABASE_URL deve puntare al servizio Docker interno**, non a `localhost`. Esempio:
+3. **DATABASE_URL must point to the internal Docker service**, not `localhost`. Example:
    - PostgreSQL: `postgresql://app:{DB_PASSWORD}@db:5432/{project_name}`
    - MySQL: `mysql://app:{DB_PASSWORD}@db:3306/{project_name}`
    - MongoDB: `mongodb://app:{DB_PASSWORD}@db:27017/{project_name}?authSource=admin`
 
-4. **PORT** deve corrispondere alla porta del Dockerfile:
+4. **PORT** must match the Dockerfile port:
    - Next.js, Nuxt, SvelteKit, Astro: `3000`
-   - Express/Node.js: la porta rilevata nel codice (default `3000`)
+   - Express/Node.js: the port detected in the code (default `3000`)
    - FastAPI, Django: `8000`
 
-### IMPORTANTE: sicurezza del file .env.production
+### IMPORTANT: .env.production File Security
 
-- Il file `.env.production` **NON viene MAI committato** nel repository git.
-- Viene passato al webhook come stringa codificata in base64 (vedi Passo 8).
-- Deve essere incluso nel `.gitignore`.
-- Avvisa l'utente se alcune variabili contengono valori sensibili (API keys, secrets, passwords) e conferma che non verranno esposti nel repository.
+- The `.env.production` file is **NEVER committed** to the git repository.
+- It is passed to the webhook as a base64-encoded string (see Step 8).
+- It must be included in `.gitignore`.
+- Warn the user if some variables contain sensitive values (API keys, secrets, passwords) and confirm they will not be exposed in the repository.
 
-## Passo 7: Git init e push
+## Step 7: Git Init and Push
 
-### 7.1: Inizializza repository git
+### 7.1: Initialize Git Repository
 
-Se la cartella NON e' gia' un repository git (non esiste `.git/`):
+If the folder is NOT already a git repository (`.git/` doesn't exist):
 
 ```bash
 git init
 ```
 
-### 7.2: Crea .gitignore
+### 7.2: Create .gitignore
 
-Se non esiste gia' un `.gitignore`, creane uno appropriato:
+If a `.gitignore` doesn't already exist, create an appropriate one:
 
 ```
 node_modules/
@@ -344,56 +344,56 @@ __pycache__/
 venv/
 ```
 
-Se `.gitignore` esiste gia', verifica che contenga almeno:
+If `.gitignore` already exists, verify it contains at least:
 - `node_modules`
 - `.env`
 - `.env.production`
 - `.env.local`
 - `.env.development`
 
-Se mancano, aggiungili.
+If missing, add them.
 
-**CRITICO**: `.env.production` DEVE essere nel `.gitignore`. Non committare MAI questo file.
+**CRITICAL**: `.env.production` MUST be in `.gitignore`. NEVER commit this file.
 
-### 7.3: Commit su main
+### 7.3: Commit to Main
 
-**PRIMA di eseguire `git add`**, verifica che `.env.production` sia nel `.gitignore`:
+**BEFORE running `git add`**, verify that `.env.production` is in `.gitignore`:
 
 ```bash
 grep -q '\.env\.production' .gitignore
 ```
 
-Se il grep fallisce (`.env.production` NON e' nel `.gitignore`), aggiungilo SUBITO:
+If grep fails (`.env.production` is NOT in `.gitignore`), add it IMMEDIATELY:
 
 ```bash
 echo '.env.production' >> .gitignore
 ```
 
-Solo DOPO aver verificato il `.gitignore`, procedi con l'add e il commit:
+Only AFTER verifying `.gitignore`, proceed with add and commit:
 
 ```bash
 git add -A
 ```
 
-**Controllo di sicurezza**: verifica che `.env.production` non sia stato staged per errore:
+**Security check**: verify that `.env.production` was not accidentally staged:
 
 ```bash
 git diff --cached --name-only | grep '.env.production'
 ```
 
-Se il grep trova `.env.production` tra i file staged, rimuovilo PRIMA di committare:
+If grep finds `.env.production` among staged files, remove it BEFORE committing:
 
 ```bash
 git rm --cached .env.production
 ```
 
-Infine, esegui il commit:
+Finally, run the commit:
 
 ```bash
 git commit -m "deploy: {project_name} via Prolato"
 ```
 
-### 7.4: Crea repository Gitea
+### 7.4: Create Gitea Repository
 
 ```bash
 curl -s -X POST "{GITEA_URL}/api/v1/user/repos" \
@@ -406,56 +406,56 @@ curl -s -X POST "{GITEA_URL}/api/v1/user/repos" \
     }'
 ```
 
-Se il repository esiste gia' (errore 409), prosegui senza errore.
+If the repository already exists (error 409), continue without error.
 
-### 7.5: Aggiungi remote
+### 7.5: Add Remote
 
-Controlla se esiste gia' un remote `origin`:
+Check if an `origin` remote already exists:
 
 ```bash
 git remote get-url origin 2>/dev/null
 ```
 
-- Se `origin` NON esiste → aggiungi come `origin`:
+- If `origin` does NOT exist → add as `origin`:
   ```bash
-  git remote add origin git@git.{DOMINIO}:{username}/{project_name}.git
+  git remote add origin git@git.{DOMAIN}:{username}/{project_name}.git
   ```
 
-- Se `origin` ESISTE GIA' (e punta a un altro URL) → aggiungi come `deploy`:
+- If `origin` ALREADY EXISTS (and points to a different URL) → add as `deploy`:
   ```bash
-  git remote add deploy git@git.{DOMINIO}:{username}/{project_name}.git
+  git remote add deploy git@git.{DOMAIN}:{username}/{project_name}.git
   ```
-  In questo caso, usa `deploy` al posto di `origin` in tutti i comandi successivi.
+  In this case, use `deploy` instead of `origin` in all subsequent commands.
 
-Se il remote esiste gia' e punta allo stesso URL, non fare nulla.
+If the remote already exists and points to the same URL, do nothing.
 
-### 7.6: Push su main
+### 7.6: Push to Main
 
 ```bash
 git push -u {remote_name} main
 ```
 
-Dove `{remote_name}` e' `origin` o `deploy` (in base al passo 7.5).
+Where `{remote_name}` is `origin` or `deploy` (based on step 7.5).
 
-**NON usare `--force`** per il push su main. Se il push fallisce per conflitti, avvisa l'utente.
+**Do NOT use `--force`** for pushing to main. If the push fails due to conflicts, notify the user.
 
-## Passo 8: Trigger webhook
+## Step 8: Trigger Webhook
 
-### Prepara i file environment in base64
+### Prepare Environment Files in Base64
 
 ```bash
 ENV_B64=$(base64 < .env.production | tr -d '\n')
 ```
 
-Se il progetto usa un database (e' stato seguito `database.md`), codifica anche il file `.env` di Docker Compose:
+If the project uses a database (`database.md` was followed), also encode the Docker Compose `.env` file:
 
 ```bash
 COMPOSE_ENV_B64=$(base64 < .env | tr -d '\n')
 ```
 
-### Invia la richiesta di deploy
+### Send the Deploy Request
 
-**Senza database:**
+**Without database:**
 
 ```bash
 curl -s -X POST "{WEBHOOK_URL}/deploy" \
@@ -463,7 +463,7 @@ curl -s -X POST "{WEBHOOK_URL}/deploy" \
     -H "Content-Type: application/json" \
     -d '{
         "project_name": "{project_name}",
-        "git_repo_url": "git@git.{DOMINIO}:{username}/{project_name}.git",
+        "git_repo_url": "git@git.{DOMAIN}:{username}/{project_name}.git",
         "branch": "main",
         "deploy_type": "docker",
         "owner": "{username}",
@@ -472,7 +472,7 @@ curl -s -X POST "{WEBHOOK_URL}/deploy" \
     }'
 ```
 
-**Con database:**
+**With database:**
 
 ```bash
 curl -s -X POST "{WEBHOOK_URL}/deploy" \
@@ -480,7 +480,7 @@ curl -s -X POST "{WEBHOOK_URL}/deploy" \
     -H "Content-Type: application/json" \
     -d '{
         "project_name": "{project_name}",
-        "git_repo_url": "git@git.{DOMINIO}:{username}/{project_name}.git",
+        "git_repo_url": "git@git.{DOMAIN}:{username}/{project_name}.git",
         "branch": "main",
         "deploy_type": "docker",
         "owner": "{username}",
@@ -490,33 +490,33 @@ curl -s -X POST "{WEBHOOK_URL}/deploy" \
     }'
 ```
 
-Dove:
-- `{PORT}` → la porta interna dell'applicazione (quella esposta nel Dockerfile)
-- `env_production` → il contenuto di `.env.production` codificato in base64
-- `compose_env` → il contenuto di `.env` (per interpolazione Docker Compose) codificato in base64, presente solo quando il progetto usa un database
+Where:
+- `{PORT}` → the internal application port (the one exposed in the Dockerfile)
+- `env_production` → the contents of `.env.production` encoded in base64
+- `compose_env` → the contents of `.env` (for Docker Compose interpolation) encoded in base64, present only when the project uses a database
 
-Verifica la risposta:
-- Se `status` e' `success` o il codice HTTP e' `200`/`201` → deploy avviato con successo.
-- Se errore → mostra il messaggio di errore all'utente.
+Verify the response:
+- If `status` is `success` or HTTP code is `200`/`201` → deploy started successfully.
+- If error → show the error message to the user.
 
-## Passo 9: Verifica e output
+## Step 9: Verify and Output
 
-Attendi qualche secondo e verifica che il sito sia raggiungibile:
+Wait a few seconds and verify the site is reachable:
 
 ```bash
-curl -s -o /dev/null -w "%{http_code}" "https://{project_name}.{DOMINIO}"
+curl -s -o /dev/null -w "%{http_code}" "https://{project_name}.{DOMAIN}"
 ```
 
-Mostra all'utente il risultato finale:
+Show the user the final result:
 
 ```
-Deploy completato con successo!
+Deploy completed successfully!
 
-URL del sito: https://{project_name}.{DOMINIO}
-Repository:   {GITEA_URL}/{username}/{project_name}
+Site URL:    https://{project_name}.{DOMAIN}
+Repository:  {GITEA_URL}/{username}/{project_name}
 
-Il sito e' ora raggiungibile all'URL indicato.
-Per aggiornare il sito, esegui di nuovo il deploy con Prolato.
+The site is now reachable at the URL above.
+To update the site, run the deploy again with Prolato.
 ```
 
-Se il sito non e' ancora raggiungibile, informa l'utente che il deploy potrebbe richiedere qualche minuto per propagarsi e che l'URL sara' presto attivo.
+If the site is not yet reachable, inform the user that the deploy may take a few minutes to propagate and the URL will be active soon.
