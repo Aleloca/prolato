@@ -58,4 +58,58 @@ describe('Server', () => {
       expect(res.status).toBe(200);
     });
   });
+
+  describe('GET /projects', () => {
+    it('returns empty list initially', async () => {
+      const res = await request(app)
+        .get('/projects')
+        .set('Authorization', 'Bearer test-token-12345');
+      expect(res.status).toBe(200);
+      expect(res.body.projects).toEqual({});
+    });
+
+    it('returns projects after adding them', async () => {
+      const registry = app.locals.registry;
+      await registry.addProject('app-1', { owner: 'alice', deploy_type: 'static' });
+      await registry.addProject('app-2', { owner: 'bob', deploy_type: 'docker' });
+
+      const res = await request(app)
+        .get('/projects')
+        .set('Authorization', 'Bearer test-token-12345');
+      expect(Object.keys(res.body.projects)).toHaveLength(2);
+    });
+
+    it('filters by owner', async () => {
+      const registry = app.locals.registry;
+      await registry.addProject('app-1', { owner: 'alice', deploy_type: 'static' });
+      await registry.addProject('app-2', { owner: 'bob', deploy_type: 'docker' });
+
+      const res = await request(app)
+        .get('/projects?owner=alice')
+        .set('Authorization', 'Bearer test-token-12345');
+      expect(Object.keys(res.body.projects)).toHaveLength(1);
+      expect(res.body.projects['app-1']).toBeDefined();
+    });
+  });
+
+  describe('GET /projects/:name', () => {
+    it('returns 404 for non-existent project', async () => {
+      const res = await request(app)
+        .get('/projects/nope')
+        .set('Authorization', 'Bearer test-token-12345');
+      expect(res.status).toBe(404);
+    });
+
+    it('returns project details', async () => {
+      const registry = app.locals.registry;
+      await registry.addProject('my-app', { owner: 'alice', deploy_type: 'static', url: 'https://my-app.example.dev' });
+
+      const res = await request(app)
+        .get('/projects/my-app')
+        .set('Authorization', 'Bearer test-token-12345');
+      expect(res.status).toBe(200);
+      expect(res.body.project.owner).toBe('alice');
+      expect(res.body.project.url).toBe('https://my-app.example.dev');
+    });
+  });
 });

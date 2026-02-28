@@ -30,6 +30,19 @@ export function createApp({ config, registry, lock, logger, caddy, shell }) {
     }
   });
 
+  // GET /projects/:name
+  app.get('/projects/:name', async (req, res) => {
+    try {
+      const project = await registry.getProject(req.params.name);
+      if (!project) {
+        return res.status(404).json({ error: 'Progetto non trovato' });
+      }
+      res.json({ project });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // Store dependencies for test access
   app.locals = { config, registry, lock, logger, caddy, shell };
 
