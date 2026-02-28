@@ -1,79 +1,79 @@
-# Rilevamento Database
+# Database Detection
 
-Segui queste regole nell'ordine indicato per determinare se il progetto usa un database e quale.
+Follow these rules in the order shown to determine if the project uses a database and which one.
 
-## Passo 1: File di configurazione ORM
+## Step 1: ORM Configuration Files
 
-Controlla la presenza di questi file nella root del progetto:
+Check for the presence of these files in the project root:
 
-| File | ORM | Come determinare il motore DB |
+| File | ORM | How to determine the DB engine |
 |---|---|---|
-| `prisma/schema.prisma` | Prisma | Leggi il campo `provider` nel blocco `datasource`: `"postgresql"`, `"mysql"`, `"sqlite"`, `"mongodb"` |
-| `drizzle.config.ts` o `drizzle.config.js` | Drizzle | Leggi il campo `dialect`: `"postgresql"`, `"mysql"`, `"sqlite"` |
-| `knexfile.js` o `knexfile.ts` | Knex | Leggi il campo `client`: `"pg"`, `"mysql"`, `"mysql2"`, `"sqlite3"` |
-| `ormconfig.json` o `ormconfig.ts` o `data-source.ts` (con `typeorm`) | TypeORM | Leggi il campo `type`: `"postgres"`, `"mysql"`, `"sqlite"`, `"mongodb"` |
-| `sequelize` in package.json + file di configurazione | Sequelize | Leggi il campo `dialect`: `"postgres"`, `"mysql"`, `"sqlite"`, `"mariadb"` |
+| `prisma/schema.prisma` | Prisma | Read the `provider` field in the `datasource` block: `"postgresql"`, `"mysql"`, `"sqlite"`, `"mongodb"` |
+| `drizzle.config.ts` or `drizzle.config.js` | Drizzle | Read the `dialect` field: `"postgresql"`, `"mysql"`, `"sqlite"` |
+| `knexfile.js` or `knexfile.ts` | Knex | Read the `client` field: `"pg"`, `"mysql"`, `"mysql2"`, `"sqlite3"` |
+| `ormconfig.json` or `ormconfig.ts` or `data-source.ts` (with `typeorm`) | TypeORM | Read the `type` field: `"postgres"`, `"mysql"`, `"sqlite"`, `"mongodb"` |
+| `sequelize` in package.json + configuration file | Sequelize | Read the `dialect` field: `"postgres"`, `"mysql"`, `"sqlite"`, `"mariadb"` |
 
-Se trovi un file ORM, hai gia' tutte le informazioni principali. Continua comunque con i passi successivi per rilevare servizi aggiuntivi (es. Redis come cache).
+If you find an ORM file, you already have all the main information. Continue with the following steps anyway to detect additional services (e.g., Redis as cache).
 
-## Passo 2: Variabili d'ambiente
+## Step 2: Environment Variables
 
-Controlla questi file nell'ordine (fermati al primo trovato per ogni variabile):
+Check these files in order (stop at the first found for each variable):
 - `.env`
 - `.env.local`
 - `.env.example`
 - `.env.development`
 
-Cerca questi pattern nei valori delle variabili:
+Look for these patterns in variable values:
 
-| Pattern nella variabile | Database |
+| Pattern in variable | Database |
 |---|---|
-| `DATABASE_URL=postgresql://...` o `DATABASE_URL=postgres://...` | PostgreSQL |
+| `DATABASE_URL=postgresql://...` or `DATABASE_URL=postgres://...` | PostgreSQL |
 | `DATABASE_URL=mysql://...` | MySQL |
-| `DATABASE_URL=file:./...` o `DATABASE_URL=file:...` | SQLite (via Prisma) |
-| `MONGODB_URI=mongodb://...` o `MONGODB_URL=mongodb://...` o `MONGO_URL=mongodb://...` | MongoDB |
-| `REDIS_URL=redis://...` o `REDIS_HOST=...` | Redis |
+| `DATABASE_URL=file:./...` or `DATABASE_URL=file:...` | SQLite (via Prisma) |
+| `MONGODB_URI=mongodb://...` or `MONGODB_URL=mongodb://...` or `MONGO_URL=mongodb://...` | MongoDB |
+| `REDIS_URL=redis://...` or `REDIS_HOST=...` | Redis |
 
-Annota anche il nome della variabile d'ambiente (es. `DATABASE_URL`, `MONGODB_URI`) — servira' per il campo `env_var_name` nell'output.
+Also note the environment variable name (e.g., `DATABASE_URL`, `MONGODB_URI`) — it will be needed for the `env_var_name` field in the output.
 
-**ATTENZIONE — Dati sensibili**: ai fini del rilevamento, conta solo il nome della variabile e il prefisso dello schema URL (es. `postgresql://`, `mongodb://`). NON includere mai password, hostname, porte o credenziali reali nell'output dell'analisi. I valori effettivi delle variabili d'ambiente non devono mai comparire nel report JSON.
+**WARNING — Sensitive data**: for detection purposes, only the variable name and the URL scheme prefix matter (e.g., `postgresql://`, `mongodb://`). NEVER include passwords, hostnames, ports, or real credentials in the analysis output. Actual environment variable values must never appear in the JSON report.
 
-## Passo 3: Dipendenze in package.json
+## Step 3: Dependencies in package.json
 
-Controlla `dependencies` e `devDependencies` in `package.json`:
+Check `dependencies` and `devDependencies` in `package.json`:
 
-| Pacchetto | Database |
+| Package | Database |
 |---|---|
-| `pg` o `postgres` o `@neondatabase/serverless` | PostgreSQL |
-| `mysql` o `mysql2` | MySQL |
-| `better-sqlite3` o `sql.js` o `sqlite3` | SQLite |
-| `mongoose` o `mongodb` | MongoDB |
-| `redis` o `ioredis` | Redis |
+| `pg` or `postgres` or `@neondatabase/serverless` | PostgreSQL |
+| `mysql` or `mysql2` | MySQL |
+| `better-sqlite3` or `sql.js` or `sqlite3` | SQLite |
+| `mongoose` or `mongodb` | MongoDB |
+| `redis` or `ioredis` | Redis |
 
-## Passo 4: File di database locali
+## Step 4: Local Database Files
 
-Cerca nella root del progetto e nella cartella `prisma/`:
+Search in the project root and in the `prisma/` folder:
 
-| Pattern file | Database |
+| File pattern | Database |
 |---|---|
-| `*.db` o `*.sqlite` o `*.sqlite3` | SQLite |
+| `*.db` or `*.sqlite` or `*.sqlite3` | SQLite |
 
-## Passo 5: docker-compose.yml esistente
+## Step 5: Existing docker-compose.yml
 
-Se esiste un file `docker-compose.yml` o `docker-compose.yaml` o `compose.yml`, leggilo e cerca le immagini usate:
+If a `docker-compose.yml` or `docker-compose.yaml` or `compose.yml` file exists, read it and look for the images used:
 
-| Immagine | Database |
+| Image | Database |
 |---|---|
-| `postgres:*` o `postgis/*` | PostgreSQL |
-| `mysql:*` o `mariadb:*` | MySQL/MariaDB |
+| `postgres:*` or `postgis/*` | PostgreSQL |
+| `mysql:*` or `mariadb:*` | MySQL/MariaDB |
 | `mongo:*` | MongoDB |
 | `redis:*` | Redis |
 
 ## Output
 
-Il campo `database` e' **sempre un array** (anche con un solo database). Se non viene trovato nessun database, imposta `"database": null`.
+The `database` field is **always an array** (even with a single database). If no database is found, set `"database": null`.
 
-Per ogni database trovato, aggiungi un elemento all'array con queste informazioni:
+For each database found, add an element to the array with this information:
 
 ```json
 {
@@ -93,20 +93,20 @@ Per ogni database trovato, aggiungi un elemento all'array con queste informazion
 }
 ```
 
-Dettagli sui campi:
+Field details:
 - `engine`: `"postgres"`, `"mysql"`, `"sqlite"`, `"mongodb"`, `"redis"`
-- `orm`: il nome dell'ORM trovato al Passo 1, o `null` se non usa un ORM
-- `schema_source`: il percorso del file di schema/configurazione ORM, o `null`
-- `has_migrations`: `true` se esiste una cartella di migrazioni (es. `prisma/migrations`, `migrations/`, `drizzle/`)
-- `migrations_dir`: il percorso della cartella migrazioni, o `null`
-- `has_seed`: `true` se esiste uno script di seed (controlla `prisma.seed` in `package.json`, o file `seed.ts`/`seed.js`)
-- `seed_command`: il comando per eseguire il seed (es. `"npx prisma db seed"`, `"npm run seed"`), o `null`
-- `local_db_file`: il percorso del file SQLite locale se trovato al Passo 4, o `null`
-- `env_var_name`: il nome della variabile d'ambiente che contiene l'URL del database
+- `orm`: the name of the ORM found in Step 1, or `null` if no ORM is used
+- `schema_source`: the path to the ORM schema/configuration file, or `null`
+- `has_migrations`: `true` if a migrations folder exists (e.g., `prisma/migrations`, `migrations/`, `drizzle/`)
+- `migrations_dir`: the path to the migrations folder, or `null`
+- `has_seed`: `true` if a seed script exists (check `prisma.seed` in `package.json`, or `seed.ts`/`seed.js` files)
+- `seed_command`: the command to run the seed (e.g., `"npx prisma db seed"`, `"npm run seed"`), or `null`
+- `local_db_file`: the path to the local SQLite file if found in Step 4, or `null`
+- `env_var_name`: the name of the environment variable containing the database URL
 
-## Database multipli
+## Multiple Databases
 
-Un progetto puo' usare piu' database contemporaneamente (es. PostgreSQL per i dati + Redis per la cache). Ogni servizio ha il proprio elemento nell'array:
+A project may use multiple databases simultaneously (e.g., PostgreSQL for data + Redis for caching). Each service has its own element in the array:
 
 ```json
 {

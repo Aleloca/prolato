@@ -1,197 +1,197 @@
-# Rilevamento Framework
+# Framework Detection
 
-Segui queste regole nell'ordine indicato per determinare il framework del progetto.
+Follow these rules in the order shown to determine the project's framework.
 
-## Passo 1: Controlla `package.json`
+## Step 1: Check `package.json`
 
-Se esiste `package.json` nella root del progetto, leggilo e cerca nelle `dependencies` e `devDependencies`:
+If `package.json` exists in the project root, read it and look in `dependencies` and `devDependencies`:
 
-| Dipendenza in `dependencies` o `devDependencies` | Framework |
+| Dependency in `dependencies` or `devDependencies` | Framework |
 |---|---|
 | `next` | Next.js |
 | `gatsby` | Gatsby |
 | `nuxt` | Nuxt.js |
 | `@sveltejs/kit` | SvelteKit |
 | `astro` | Astro |
-| `vite` + `react` (senza nessun framework sopra) | React (Vite) |
+| `vite` + `react` (without any framework above) | React (Vite) |
 | `react-scripts` | React (Create React App) |
-| `vite` + `vue` (senza Nuxt) | Vue (Vite) |
+| `vite` + `vue` (without Nuxt) | Vue (Vite) |
 | `@angular/core` | Angular |
-| `express` o `fastify` o `koa` o `hono` (senza framework frontend sopra) | Backend Node.js |
+| `express` or `fastify` or `koa` or `hono` (without any frontend framework above) | Backend Node.js |
 
-La tabella e' in ordine di priorita': se trovi `next` e anche `react`, il framework e' Next.js (non React).
+The table is in priority order: if you find both `next` and `react`, the framework is Next.js (not React).
 
-### Rilevamento versione framework
+### Framework Version Detection
 
-Dopo aver identificato il framework, rileva la sua versione dal campo corrispondente in `package.json` (`dependencies` o `devDependencies`). Estrai la versione numerica rimuovendo prefissi come `^`, `~`, `>=`, ecc.
+After identifying the framework, detect its version from the corresponding field in `package.json` (`dependencies` or `devDependencies`). Extract the numeric version by removing prefixes like `^`, `~`, `>=`, etc.
 
-Esempi:
+Examples:
 - `"next": "^14.0.0"` → `version`: `"14.0.0"`
 - `"react": "~18.2.0"` → `version`: `"18.2.0"`
 - `"express": "4.18.2"` → `version`: `"4.18.2"`
 - `"astro": ">=4.0.0"` → `version`: `"4.0.0"`
 
-Se la versione non e' determinabile (es. `"*"` o `"latest"`), imposta `version`: `null`.
+If the version cannot be determined (e.g., `"*"` or `"latest"`), set `version`: `null`.
 
-## Passo 2: Se non esiste `package.json`
+## Step 2: If `package.json` Does Not Exist
 
-Controlla la presenza di questi file/cartelle:
+Check for the presence of these files/folders:
 
-| File/cartella presente | Tipo progetto |
+| File/folder present | Project type |
 |---|---|
-| `index.html` nella root | HTML/CSS/JS statico |
-| `requirements.txt` o `pyproject.toml` o `Pipfile` | Python (Flask/Django/FastAPI) |
-| `Dockerfile` (e nient'altro di riconoscibile) | Docker generico |
+| `index.html` in root | Static HTML/CSS/JS |
+| `requirements.txt` or `pyproject.toml` or `Pipfile` | Python (Flask/Django/FastAPI) |
+| `Dockerfile` (and nothing else recognizable) | Generic Docker |
 
-## Passo 3: Informazioni aggiuntive per ogni framework
+## Step 3: Additional Information Per Framework
 
-### Next.js — determina se statico o dinamico
+### Next.js — determine if static or dynamic
 
-Esegui questi controlli nell'ordine. Se trovi anche solo una condizione che richiede SSR, il progetto necessita Docker.
+Run these checks in order. If you find even one condition requiring SSR, the project needs Docker.
 
-- Cerca `getServerSideProps` o `getInitialProps` in qualsiasi file sotto `pages/` o `src/pages/`. Se trovato → SSR, necessita Docker.
-- Cerca file sotto `app/` o `src/app/` con `export const dynamic = 'force-dynamic'` o `export const revalidate = 0`. Se trovato → SSR, necessita Docker.
-- Cerca file sotto `app/api/` o `pages/api/`. Se trovati → ha API routes, necessita Docker.
-- Cerca `middleware.ts` o `middleware.js` nella root o in `src/`. Se trovato → necessita Docker.
-- Controlla `next.config.js` o `next.config.mjs`: se contiene `output: 'export'` → esplicitamente statico.
-- Se nessuna delle condizioni sopra → considera statico e usa `next build` con output export.
+- Look for `getServerSideProps` or `getInitialProps` in any file under `pages/` or `src/pages/`. If found → SSR, needs Docker.
+- Look for files under `app/` or `src/app/` with `export const dynamic = 'force-dynamic'` or `export const revalidate = 0`. If found → SSR, needs Docker.
+- Look for files under `app/api/` or `pages/api/`. If found → has API routes, needs Docker.
+- Look for `middleware.ts` or `middleware.js` in the root or in `src/`. If found → needs Docker.
+- Check `next.config.js` or `next.config.mjs`: if it contains `output: 'export'` → explicitly static.
+- If none of the conditions above → consider static and use `next build` with export output.
 
-Valori da impostare:
-- `has_ssr`: `true` se trovate condizioni SSR, altrimenti `false`
-- `has_api_routes`: `true` se trovata cartella `app/api/` o `pages/api/`
+Values to set:
+- `has_ssr`: `true` if SSR conditions found, otherwise `false`
+- `has_api_routes`: `true` if `app/api/` or `pages/api/` folder found
 - `build_command`: `"npm run build"`
-- `output_dir`: `"out"` (se statico con export), `".next"` (se SSR/Docker)
-- `start_command`: `"npm start"` (se SSR/Docker), `null` (se statico)
+- `output_dir`: `"out"` (if static with export), `".next"` (if SSR/Docker)
+- `start_command`: `"npm start"` (if SSR/Docker), `null` (if static)
 
-### React (Vite / CRA) — quasi sempre statico
+### React (Vite / CRA) — almost always static
 
 - Build command: `npm run build`.
-- Output: `dist/` (Vite) o `build/` (CRA).
-- Eccezione: se ci sono file che importano `express` e c'e' un `server.js` → ha backend integrato, necessita Docker.
+- Output: `dist/` (Vite) or `build/` (CRA).
+- Exception: if there are files importing `express` and there's a `server.js` → has integrated backend, needs Docker.
 
-Valori da impostare:
+Values to set:
 - `has_ssr`: `false`
 - `has_api_routes`: `false`
 - `build_command`: `"npm run build"`
-- `output_dir`: `"dist"` (Vite) o `"build"` (CRA)
-- `start_command`: `null` (statico) o `"node server.js"` (se ha backend)
+- `output_dir`: `"dist"` (Vite) or `"build"` (CRA)
+- `start_command`: `null` (static) or `"node server.js"` (if has backend)
 
-### Gatsby — sempre statico
+### Gatsby — always static
 
 - Build command: `gatsby build`.
 - Output: `public/`.
 
-Valori da impostare:
+Values to set:
 - `has_ssr`: `false`
 - `has_api_routes`: `false`
 - `build_command`: `"gatsby build"`
 - `output_dir`: `"public"`
 - `start_command`: `null`
 
-### Astro — controlla modalita'
+### Astro — check mode
 
-- Controlla `astro.config.mjs` (o `astro.config.ts`): se contiene `output: 'server'` o `output: 'hybrid'` → necessita Docker.
-- Default (`output: 'static'` o non specificato) → statico.
+- Check `astro.config.mjs` (or `astro.config.ts`): if it contains `output: 'server'` or `output: 'hybrid'` → needs Docker.
+- Default (`output: 'static'` or not specified) → static.
 - Output: `dist/`.
 
-Valori da impostare:
-- `has_ssr`: `true` se `output` e' `'server'` o `'hybrid'`, altrimenti `false`
+Values to set:
+- `has_ssr`: `true` if `output` is `'server'` or `'hybrid'`, otherwise `false`
 - `has_api_routes`: `false`
 - `build_command`: `"npm run build"`
 - `output_dir`: `"dist"`
-- `start_command`: `"node ./dist/server/entry.mjs"` (se SSR), `null` (se statico)
+- `start_command`: `"node ./dist/server/entry.mjs"` (if SSR), `null` (if static)
 
-### Vue (Nuxt) — controlla modalita'
+### Vue (Nuxt) — check mode
 
-- Controlla `nuxt.config.ts` (o `nuxt.config.js`): se `ssr: false` → statico, usa `nuxt generate`, output `.output/public/`.
-- Se `ssr: true` (default) → necessita Docker.
+- Check `nuxt.config.ts` (or `nuxt.config.js`): if `ssr: false` → static, use `nuxt generate`, output `.output/public/`.
+- If `ssr: true` (default) → needs Docker.
 
-Valori da impostare per Nuxt:
-- `has_ssr`: valore di `ssr` nel config (default `true`)
-- `has_api_routes`: controlla se esistono file in `server/api/`
-- `build_command`: `"nuxt generate"` (statico) o `"nuxt build"` (SSR)
-- `output_dir`: `".output/public"` (statico) o `".output"` (SSR)
-- `start_command`: `"node .output/server/index.mjs"` (SSR), `null` (statico)
+Values to set for Nuxt:
+- `has_ssr`: value of `ssr` in config (default `true`)
+- `has_api_routes`: check if files exist in `server/api/`
+- `build_command`: `"nuxt generate"` (static) or `"nuxt build"` (SSR)
+- `output_dir`: `".output/public"` (static) or `".output"` (SSR)
+- `start_command`: `"node .output/server/index.mjs"` (SSR), `null` (static)
 
-Valori da impostare per Vue (senza Nuxt):
+Values to set for Vue (without Nuxt):
 - `has_ssr`: `false`
 - `has_api_routes`: `false`
 - `build_command`: `"npm run build"`
 - `output_dir`: `"dist"`
 - `start_command`: `null`
 
-### Angular — quasi sempre statico
+### Angular — almost always static
 
-- Build command: `ng build` o `npm run build`.
-- Output: `dist/{nome-progetto}/`. Per trovare il nome del progetto, leggi `angular.json` e cerca il nome del progetto principale sotto `projects`.
+- Build command: `ng build` or `npm run build`.
+- Output: `dist/{project-name}/`. To find the project name, read `angular.json` and look for the main project name under `projects`.
 
-Valori da impostare:
-- `has_ssr`: `false` (a meno che non usi Angular Universal — cerca `@nguniversal` nelle dipendenze)
+Values to set:
+- `has_ssr`: `false` (unless using Angular Universal — look for `@nguniversal` in dependencies)
 - `has_api_routes`: `false`
 - `build_command`: `"npm run build"`
-- `output_dir`: `"dist/{nome-progetto}"` (o `"dist/{nome-progetto}/browser"` per Angular 17+)
-- `start_command`: `null` (statico), `"node dist/{nome-progetto}/server/main.js"` (se SSR)
+- `output_dir`: `"dist/{project-name}"` (or `"dist/{project-name}/browser"` for Angular 17+)
+- `start_command`: `null` (static), `"node dist/{project-name}/server/main.js"` (if SSR)
 
-### SvelteKit — controlla adapter
+### SvelteKit — check adapter
 
-- Controlla `svelte.config.js`: cerca quale adapter viene usato.
-  - Se usa `@sveltejs/adapter-static` → statico.
-  - Se usa `@sveltejs/adapter-node` → necessita Docker.
-  - Se usa `@sveltejs/adapter-auto` → necessita Docker (per sicurezza).
+- Check `svelte.config.js`: look for which adapter is used.
+  - If using `@sveltejs/adapter-static` → static.
+  - If using `@sveltejs/adapter-node` → needs Docker.
+  - If using `@sveltejs/adapter-auto` → needs Docker (to be safe).
 
-Valori da impostare:
-- `has_ssr`: `true` se usa `adapter-node` o `adapter-auto`, `false` se usa `adapter-static`
-- `has_api_routes`: controlla se esistono file `+server.ts`/`+server.js` sotto `src/routes/`
+Values to set:
+- `has_ssr`: `true` if using `adapter-node` or `adapter-auto`, `false` if using `adapter-static`
+- `has_api_routes`: check if `+server.ts`/`+server.js` files exist under `src/routes/`
 - `build_command`: `"npm run build"`
-- `output_dir`: `"build"` (statico con adapter-static) o `"build"` (Docker con adapter-node)
+- `output_dir`: `"build"` (static with adapter-static) or `"build"` (Docker with adapter-node)
 - `start_command`: `"node build"` (adapter-node), `null` (adapter-static)
 
-### Backend Node.js (Express/Fastify/Koa/Hono) — sempre Docker
+### Backend Node.js (Express/Fastify/Koa/Hono) — always Docker
 
-- Trova il file di ingresso: campo `main` in `package.json`, oppure `server.js`, `index.js`, `app.js`.
-- Identifica la porta: cerca `listen(`, `PORT`, `process.env.PORT`.
-- Start command: `node {file_ingresso}` o lo script `start` in `package.json`.
+- Find the entry file: `main` field in `package.json`, or `server.js`, `index.js`, `app.js`.
+- Identify the port: look for `listen(`, `PORT`, `process.env.PORT`.
+- Start command: `node {entry_file}` or the `start` script in `package.json`.
 
-Valori da impostare:
+Values to set:
 - `has_ssr`: `false`
 - `has_api_routes`: `true`
-- `build_command`: script `build` in `package.json` se esiste, altrimenti `null`
+- `build_command`: `build` script in `package.json` if it exists, otherwise `null`
 - `output_dir`: `null`
-- `start_command`: `"npm start"` o `"node {file_ingresso}"`
+- `start_command`: `"npm start"` or `"node {entry_file}"`
 
-### Python (Flask/Django/FastAPI) — sempre Docker
+### Python (Flask/Django/FastAPI) — always Docker
 
-- **Flask**: cerca `from flask import` o `Flask(__name__)` nei file `.py`.
-- **Django**: cerca `django` in `requirements.txt` e verifica la presenza di `manage.py`.
-- **FastAPI**: cerca `from fastapi import` o `FastAPI()` nei file `.py`.
+- **Flask**: look for `from flask import` or `Flask(__name__)` in `.py` files.
+- **Django**: look for `django` in `requirements.txt` and verify `manage.py` exists.
+- **FastAPI**: look for `from fastapi import` or `FastAPI()` in `.py` files.
 
-Valori da impostare:
-- `name`: `"flask"`, `"django"` o `"fastapi"`
+Values to set:
+- `name`: `"flask"`, `"django"` or `"fastapi"`
 - `has_ssr`: `false`
 - `has_api_routes`: `true`
 - `build_command`: `null`
 - `output_dir`: `null`
 - `start_command`:
-  - Flask: `"python -m flask run --host=0.0.0.0 --port=8080"` (oppure `"gunicorn app:app"` se `gunicorn` e' nelle dipendenze)
-  - Django: `"python manage.py runserver 0.0.0.0:8080"` (oppure `"gunicorn {nome_progetto}.wsgi"` se `gunicorn` e' nelle dipendenze)
-  - FastAPI: `"uvicorn main:app --host 0.0.0.0 --port 8080"` (cerca il file che contiene `FastAPI()` per determinare il modulo, es. `app.main:app`)
+  - Flask: `"python -m flask run --host=0.0.0.0 --port=8080"` (or `"gunicorn app:app"` if `gunicorn` is in dependencies)
+  - Django: `"python manage.py runserver 0.0.0.0:8080"` (or `"gunicorn {project_name}.wsgi"` if `gunicorn` is in dependencies)
+  - FastAPI: `"uvicorn main:app --host 0.0.0.0 --port 8080"` (look for the file containing `FastAPI()` to determine the module, e.g., `app.main:app`)
 
-### HTML/CSS/JS puro — sempre statico
+### Pure HTML/CSS/JS — always static
 
-- Non serve build.
-- La cartella stessa e' l'output.
+- No build needed.
+- The folder itself is the output.
 
-Valori da impostare:
+Values to set:
 - `name`: `"static-html"`
 - `has_ssr`: `false`
 - `has_api_routes`: `false`
 - `build_command`: `null`
-- `output_dir`: `"."` (la root del progetto)
+- `output_dir`: `"."` (the project root)
 - `start_command`: `null`
 
-## Passo 4: Progetto non riconosciuto
+## Step 4: Unrecognized Project
 
-Se dopo i Passi 1-3 non riesci a identificare nessun framework o tipo di progetto, imposta:
+If after Steps 1-3 you cannot identify any framework or project type, set:
 
 - `name`: `"unknown"`
 - `version`: `null`
@@ -201,21 +201,21 @@ Se dopo i Passi 1-3 non riesci a identificare nessun framework o tipo di progett
 - `output_dir`: `null`
 - `start_command`: `null`
 
-In questo caso, chiedi all'utente di specificare:
-1. Di che tipo di progetto si tratta
-2. Qual e' il comando di build (se presente)
-3. Qual e' la cartella di output
-4. Se il progetto necessita di un server (e quale comando lo avvia)
+In this case, ask the user to specify:
+1. What type of project it is
+2. What the build command is (if any)
+3. What the output folder is
+4. Whether the project needs a server (and which command starts it)
 
-Non procedere con il deploy fino a quando l'utente non fornisce queste informazioni.
+Do not proceed with the deploy until the user provides this information.
 
-## Passo 5: Rilevamento versione Node
+## Step 5: Node Version Detection
 
-Controlla nell'ordine (fermati al primo trovato):
+Check in this order (stop at the first found):
 
-1. `.nvmrc` → contiene la versione (es. `20`, `18.17.0`).
-2. `.node-version` → contiene la versione.
-3. `engines.node` in `package.json` → contiene un range (es. `>=18`, `^20.0.0`). Usa la versione major.
-4. Default: `20` (LTS corrente).
+1. `.nvmrc` → contains the version (e.g., `20`, `18.17.0`).
+2. `.node-version` → contains the version.
+3. `engines.node` in `package.json` → contains a range (e.g., `>=18`, `^20.0.0`). Use the major version.
+4. Default: `20` (current LTS).
 
-Imposta il campo `node_version` con la versione major trovata (es. `"20"`, `"18"`).
+Set the `node_version` field with the major version found (e.g., `"20"`, `"18"`).

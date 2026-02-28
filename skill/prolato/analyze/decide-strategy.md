@@ -1,52 +1,52 @@
-# Decisione Strategia di Deploy
+# Deploy Strategy Decision
 
-Usa le informazioni raccolte da `detect-framework.md` e `detect-database.md` per decidere la strategia di deploy.
+Use the information gathered from `detect-framework.md` and `detect-database.md` to decide the deploy strategy.
 
-## Albero decisionale
+## Decision Tree
 
-Segui questo albero dall'alto verso il basso:
+Follow this tree from top to bottom:
 
 ```
-Il progetto ha un backend (Express, Fastify, Koa, Hono, Django, Flask, FastAPI)?
-├── SI' → deploy_strategy: "docker"
-└── NO → Il framework necessita SSR?
-    ├── SI' (Next.js con SSR, Nuxt con SSR, SvelteKit con adapter-node, Astro con output server/hybrid) → deploy_strategy: "docker"
-    └── NO → Ha un database?
-        ├── SI' → Ha SOLO SQLite locale?
-        │   ├── SI' → deploy_strategy: "docker"
-        │   │   (SQLite necessita un volume persistente, quindi serve Docker anche se l'app e' statica.
-        │   │    Eccezione: se l'app e' puramente statica e SQLite e' usato solo in fase di build,
-        │   │    si puo' procedere con statico. Verifica controllando se il codice client accede al DB.)
+Does the project have a backend (Express, Fastify, Koa, Hono, Django, Flask, FastAPI)?
+├── YES → deploy_strategy: "docker"
+└── NO → Does the framework need SSR?
+    ├── YES (Next.js with SSR, Nuxt with SSR, SvelteKit with adapter-node, Astro with output server/hybrid) → deploy_strategy: "docker"
+    └── NO → Does it have a database?
+        ├── YES → Does it have ONLY local SQLite?
+        │   ├── YES → deploy_strategy: "docker"
+        │   │   (SQLite needs a persistent volume, so Docker is needed even if the app is static.
+        │   │    Exception: if the app is purely static and SQLite is only used at build time,
+        │   │    you can proceed with static. Verify by checking if client code accesses the DB.)
         │   └── NO (Postgres, MySQL, Mongo, Redis) → deploy_strategy: "docker"
         └── NO → deploy_strategy: "static"
 ```
 
-## Regole riassuntive
+## Summary Rules
 
-| Condizione | Strategia |
+| Condition | Strategy |
 |---|---|
 | Backend Node.js (Express/Fastify/Koa/Hono) | `docker` |
 | Python (Flask/Django/FastAPI) | `docker` |
-| Next.js con SSR, API routes o middleware | `docker` |
-| Next.js con `output: 'export'` e senza API | `static` |
-| Nuxt con `ssr: true` (default) | `docker` |
-| Nuxt con `ssr: false` | `static` |
-| SvelteKit con `adapter-node` o `adapter-auto` | `docker` |
-| SvelteKit con `adapter-static` | `static` |
-| Astro con `output: 'server'` o `'hybrid'` | `docker` |
-| Astro con `output: 'static'` (default) | `static` |
+| Next.js with SSR, API routes, or middleware | `docker` |
+| Next.js with `output: 'export'` and no API | `static` |
+| Nuxt with `ssr: true` (default) | `docker` |
+| Nuxt with `ssr: false` | `static` |
+| SvelteKit with `adapter-node` or `adapter-auto` | `docker` |
+| SvelteKit with `adapter-static` | `static` |
+| Astro with `output: 'server'` or `'hybrid'` | `docker` |
+| Astro with `output: 'static'` (default) | `static` |
 | Gatsby | `static` |
-| React (Vite/CRA) senza backend | `static` |
-| Vue (senza Nuxt) | `static` |
-| Angular senza Angular Universal | `static` |
-| HTML/CSS/JS puro | `static` |
-| Qualsiasi progetto con database Postgres/MySQL/Mongo/Redis | `docker` |
-| Qualsiasi progetto con solo SQLite locale | `docker` |
-| Docker generico (solo Dockerfile) | `docker` |
+| React (Vite/CRA) without backend | `static` |
+| Vue (without Nuxt) | `static` |
+| Angular without Angular Universal | `static` |
+| Pure HTML/CSS/JS | `static` |
+| Any project with Postgres/MySQL/Mongo/Redis database | `docker` |
+| Any project with only local SQLite | `docker` |
+| Generic Docker (Dockerfile only) | `docker` |
 
 ## Output
 
-Produci questo JSON:
+Produce this JSON:
 
 ```json
 {
@@ -58,25 +58,25 @@ Produci questo JSON:
 }
 ```
 
-### Dettagli sui campi
+### Field Details
 
-- **`deploy_strategy`**: `"static"` o `"docker"`. Determinato dall'albero decisionale sopra.
+- **`deploy_strategy`**: `"static"` or `"docker"`. Determined by the decision tree above.
 
-- **`needs_docker`**: `true` se `deploy_strategy` e' `"docker"`, `false` altrimenti. Corrisponde sempre alla strategia.
+- **`needs_docker`**: `true` if `deploy_strategy` is `"docker"`, `false` otherwise. Always matches the strategy.
 
-- **`docker_services`**: lista dei servizi Docker necessari. Imposta cosi':
-  - Se `deploy_strategy` e' `"static"` → `[]`
-  - Se `deploy_strategy` e' `"docker"` → sempre almeno `["app"]`
-  - Se c'e' un database PostgreSQL o MySQL → aggiungi `"db"`
-  - Se c'e' MongoDB → aggiungi `"mongo"`
-  - Se c'e' Redis → aggiungi `"redis"`
-  - Esempio con app + PostgreSQL + Redis: `["app", "db", "redis"]`
+- **`docker_services`**: list of required Docker services. Set as follows:
+  - If `deploy_strategy` is `"static"` → `[]`
+  - If `deploy_strategy` is `"docker"` → always at least `["app"]`
+  - If there's a PostgreSQL or MySQL database → add `"db"`
+  - If there's MongoDB → add `"mongo"`
+  - If there's Redis → add `"redis"`
+  - Example with app + PostgreSQL + Redis: `["app", "db", "redis"]`
 
-- **`build_locally`**: determina dove avviene la build.
-  - `true` per progetti statici: la build avviene sulla macchina dello sviluppatore prima del push. Il risultato (la cartella di output) viene poi pushato al server.
-  - `false` per progetti Docker: la build avviene sul server all'interno del container.
+- **`build_locally`**: determines where the build happens.
+  - `true` for static projects: the build happens on the developer's machine before pushing. The result (the output folder) is then pushed to the server.
+  - `false` for Docker projects: the build happens on the server inside the container.
 
-- **`static_output_dir`**: la cartella contenente i file statici da pushare.
-  - Se `deploy_strategy` e' `"static"` → imposta alla cartella di output del framework (es. `"dist"`, `"build"`, `"out"`, `"public"`, `"."`).
-  - Se `deploy_strategy` e' `"docker"` → `null`.
-  - Usa il valore `output_dir` determinato in `detect-framework.md`.
+- **`static_output_dir`**: the folder containing the static files to push.
+  - If `deploy_strategy` is `"static"` → set to the framework's output folder (e.g., `"dist"`, `"build"`, `"out"`, `"public"`, `"."`).
+  - If `deploy_strategy` is `"docker"` → `null`.
+  - Use the `output_dir` value determined in `detect-framework.md`.

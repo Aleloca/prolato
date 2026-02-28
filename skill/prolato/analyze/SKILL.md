@@ -1,24 +1,24 @@
 ---
 name: prolato-analyze
-description: Analizza il progetto corrente per determinare framework, database e strategia di deploy
+description: Analyze the current project to determine framework, database, and deploy strategy
 ---
 
-# Analisi Progetto
+# Project Analysis
 
-Analizza il progetto nella directory corrente e produci un report JSON.
+Analyze the project in the current directory and produce a JSON report.
 
-## Flusso
+## Flow
 
-1. Leggi e segui `detect-framework.md` → ottieni info framework
-2. Leggi e segui `detect-database.md` → ottieni info database
-3. Leggi e segui `decide-strategy.md` → ottieni strategia
-4. Rileva variabili d'ambiente → popola `env_vars`
+1. Read and follow `detect-framework.md` → get framework info
+2. Read and follow `detect-database.md` → get database info
+3. Read and follow `decide-strategy.md` → get strategy
+4. Detect environment variables → populate `env_vars`
 
-## Passo 4: Rilevamento variabili d'ambiente
+## Step 4: Environment Variable Detection
 
-Se esiste `.env.example` nella root del progetto, leggilo e raccogli i nomi di tutte le variabili d'ambiente definite. Per ogni variabile, annota il nome e lascia il valore vuoto (stringa vuota). Queste variabili verranno inserite nel campo `env_vars` dell'output.
+If `.env.example` exists in the project root, read it and collect the names of all defined environment variables. For each variable, note the name and leave the value empty (empty string). These variables will go into the `env_vars` field of the output.
 
-Esempio: se `.env.example` contiene:
+Example: if `.env.example` contains:
 ```
 DATABASE_URL=postgresql://localhost:5432/mydb
 NEXT_PUBLIC_API_URL=http://localhost:3000/api
@@ -26,7 +26,7 @@ SECRET_KEY=changeme
 REDIS_URL=redis://localhost:6379
 ```
 
-Il campo `env_vars` sara':
+The `env_vars` field will be:
 ```json
 {
     "DATABASE_URL": "",
@@ -36,17 +36,17 @@ Il campo `env_vars` sara':
 }
 ```
 
-Se `.env.example` non esiste, imposta `env_vars`: `{}`.
+If `.env.example` does not exist, set `env_vars`: `{}`.
 
-**Attenzione**: non copiare mai i valori reali delle variabili d'ambiente nell'output. Raccogli solo i nomi.
+**Warning**: never copy actual environment variable values into the output. Collect only the names.
 
 ## Output
 
-Produci questo JSON e comunicalo al flusso di deploy:
+Produce this JSON and pass it to the deploy flow:
 
 ```json
 {
-    "project_name_suggestion": "nome-derivato-dalla-cartella",
+    "project_name_suggestion": "name-derived-from-folder",
     "framework": {
         "name": "react-vite | nextjs | express | ...",
         "version": "x.y.z",
