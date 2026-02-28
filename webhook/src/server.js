@@ -1,11 +1,14 @@
 import express from 'express';
 import { createAuthMiddleware } from './lib/auth.js';
+import { validateDeployPayload } from './lib/validate.js';
+import { Deployer } from './lib/deployer.js';
 
 export function createApp({ config, registry, lock, logger, caddy, shell }) {
   const app = express();
   app.use(express.json({ limit: '50mb' }));
 
   const auth = createAuthMiddleware(config.deployToken);
+  const deployer = new Deployer({ registry, lock, logger, caddy, shell, config });
 
   // Health check — no auth
   app.get('/health', async (req, res) => {
@@ -30,6 +33,65 @@ export function createApp({ config, registry, lock, logger, caddy, shell }) {
     }
   });
 
+  // GET /projects/:name/logs — MUST be before GET /projects/:name
+  app.get('/projects/:name/logs', async (req, res) => {
+    try {
+      const lines = parseInt(req.query.lines, 10) || 50;
+      const result = await deployer.getProjectLogs(req.params.name, lines);
+      res.json(result);
+    } catch (err) {
+      if (err.message === 'Progetto non trovato') {
+        return res.status(404).json({ error: err.message });
+      }
+      if (err.message === 'Logs disponibili solo per progetti Docker') {
+        return res.status(400).json({ error: err.message });
+      }
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // GET /projects/:name/status — MUST be before GET /projects/:name
+  app.get('/projects/:name/status', async (req, res) => {
+    try {
+      const result = await deployer.getProjectStatus(req.params.name);
+      res.json(result);
+    } catch (err) {
+      if (err.message === 'Progetto non trovato') {
+        return res.status(404).json({ error: err.message });
+      }
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // POST /projects/:name/rollback — MUST be before GET /projects/:name
+  app.post('/projects/:name/rollback', async (req, res) => {
+    try {
+      const result = await deployer.rollback(req.params.name);
+      res.json(result);
+    } catch (err) {
+      if (err.message === 'Progetto non trovato') {
+        return res.status(404).json({ error: err.message });
+      }
+      if (err.message === 'Nessun deploy precedente disponibile per il rollback') {
+        return res.status(400).json({ error: err.message });
+      }
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // DELETE /projects/:name
+  app.delete('/projects/:name', async (req, res) => {
+    try {
+      const result = await deployer.deleteProject(req.params.name);
+      res.json(result);
+    } catch (err) {
+      if (err.message === 'Progetto non trovato') {
+        return res.status(404).json({ error: err.message });
+      }
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // GET /projects/:name
   app.get('/projects/:name', async (req, res) => {
     try {
@@ -39,6 +101,28 @@ export function createApp({ config, registry, lock, logger, caddy, shell }) {
       }
       res.json({ project });
     } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // POST /deploy
+  app.post('/deploy', async (req, res) => {
+    try {
+      validateDeployPayload(req.body);
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+
+    try {
+      const result = await deployer.deploy(req.body);
+      res.json(result);
+    } catch (err) {
+      if (err.message.startsWith('Deploy already in progress')) {
+        return res.status(409).json({ error: err.message });
+      }
+      if (err.message.includes('appartiene a')) {
+        return res.status(403).json({ error: err.message });
+      }
       res.status(500).json({ error: err.message });
     }
   });

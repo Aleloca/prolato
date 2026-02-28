@@ -112,4 +112,66 @@ describe('Server', () => {
       expect(res.body.project.url).toBe('https://my-app.example.dev');
     });
   });
+
+  describe('POST /deploy', () => {
+    it('returns 400 for invalid payload', async () => {
+      const res = await request(app)
+        .post('/deploy')
+        .set('Authorization', 'Bearer test-token-12345')
+        .send({ project_name: 'INVALID' });
+      expect(res.status).toBe(400);
+    });
+
+    it('deploys a static project', async () => {
+      const res = await request(app)
+        .post('/deploy')
+        .set('Authorization', 'Bearer test-token-12345')
+        .send({
+          project_name: 'test-app',
+          git_repo_url: 'git@git.example.dev:alice/test-app.git',
+          branch: 'deploy',
+          deploy_type: 'static',
+          owner: 'alice',
+        });
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.url).toContain('test-app');
+    });
+  });
+
+  describe('POST /projects/:name/rollback', () => {
+    it('returns 404 for non-existent project', async () => {
+      const res = await request(app)
+        .post('/projects/nope/rollback')
+        .set('Authorization', 'Bearer test-token-12345');
+      expect(res.status).toBe(404);
+    });
+  });
+
+  describe('DELETE /projects/:name', () => {
+    it('returns 404 for non-existent project', async () => {
+      const res = await request(app)
+        .delete('/projects/nope')
+        .set('Authorization', 'Bearer test-token-12345');
+      expect(res.status).toBe(404);
+    });
+  });
+
+  describe('GET /projects/:name/logs', () => {
+    it('returns 404 for non-existent project', async () => {
+      const res = await request(app)
+        .get('/projects/nope/logs')
+        .set('Authorization', 'Bearer test-token-12345');
+      expect(res.status).toBe(404);
+    });
+  });
+
+  describe('GET /projects/:name/status', () => {
+    it('returns 404 for non-existent project', async () => {
+      const res = await request(app)
+        .get('/projects/nope/status')
+        .set('Authorization', 'Bearer test-token-12345');
+      expect(res.status).toBe(404);
+    });
+  });
 });
