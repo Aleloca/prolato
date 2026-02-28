@@ -1,0 +1,18 @@
+[Unit]
+Description=Prolato Deploy Webhook
+After=network.target docker.service
+
+[Service]
+Type=simple
+User=deploy
+Group=deploy
+WorkingDirectory=/opt/webhook
+ExecStart=/usr/bin/node src/index.js
+Restart=always
+RestartSec=5
+EnvironmentFile=/opt/webhook/.env
+StandardOutput=append:/var/log/webhook/webhook.log
+StandardError=append:/var/log/webhook/webhook.log
+
+[Install]
+WantedBy=multi-user.target
