@@ -1,0 +1,10 @@
+{
+    "gitea_url": "https://git.tuodominio.dev",
+    "gitea_username": "",
+    "gitea_token": "",
+    "gitea_admin_token": "",
+    "webhook_url": "https://webhook.tuodominio.dev",
+    "deploy_token": "",
+    "domain": "tuodominio.dev",
+    "ssh_key_path": "~/.ssh/deploy_key"
+}
