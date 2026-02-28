@@ -30,7 +30,43 @@ Se il database richiede anche una password root (es. MySQL), generane una separa
 DB_ROOT_PASSWORD=$(openssl rand -hex 24)
 ```
 
-## Passo 2: Generazione docker-compose.yml
+## Passo 2: Generazione file .env per Docker Compose
+
+Docker Compose interpola le variabili `${...}` presenti nel `docker-compose.yml` dal file `.env` nella root del progetto (NON da `env_file`, che e' disponibile solo dentro il container). Poiche' il servizio `db` usa `${DB_PASSWORD}`, `${PROJECT_NAME}` (e `${DB_ROOT_PASSWORD}` per MySQL) nella sezione `environment`, questi valori devono essere presenti nel file `.env`.
+
+Crea un file `.env` nella root del progetto contenente:
+
+```
+DB_PASSWORD={password_generata}
+PROJECT_NAME={project_name}
+```
+
+Per MySQL, aggiungi anche:
+```
+DB_ROOT_PASSWORD={root_password_generata}
+```
+
+**IMPORTANTE**: questo file `.env` e' separato da `.env.production`. Il file `.env` serve SOLO per l'interpolazione delle variabili nel `docker-compose.yml` da parte di Docker Compose. Il file `.env.production` viene passato ai container tramite `env_file` e contiene tutte le variabili d'ambiente dell'applicazione.
+
+Aggiungi `.env` al `.gitignore` (se non gia' presente) — contiene password e NON deve essere committato:
+
+```bash
+grep -q '^\.env$' .gitignore || echo '.env' >> .gitignore
+```
+
+**Nota**: il file `.env` viene passato al webhook insieme a `.env.production` come base64. Nell'invio al webhook (Passo 8 di `docker.md`), codifica ENTRAMBI i file:
+
+```bash
+ENV_B64=$(base64 < .env.production | tr -d '\n')
+COMPOSE_ENV_B64=$(base64 < .env | tr -d '\n')
+```
+
+E aggiungi `"compose_env"` al payload del webhook:
+```json
+"compose_env": "{base64_encoded_compose_env_file}"
+```
+
+## Passo 3: Generazione docker-compose.yml
 
 Genera il `docker-compose.yml` completo, includendo il servizio applicazione E il servizio database.
 
@@ -271,14 +307,13 @@ E aggiungi `redis` come dipendenza dell'app:
 ### Adattamento porte
 
 La porta interna dell'app nel `docker-compose.yml` deve corrispondere alla porta `EXPOSE` del Dockerfile:
-- Next.js, Nuxt, SvelteKit: `3000`
+- Next.js, Nuxt, SvelteKit, Astro: `3000`
 - Express/Node.js: la porta rilevata nel codice (default `3000`)
 - FastAPI, Django: `8000`
-- Astro: `4321`
 
 Sostituisci `3000` negli esempi sopra con la porta corretta.
 
-## Passo 3: Generazione start.sh
+## Passo 4: Generazione start.sh
 
 Genera uno script `start.sh` che gestisce le migrazioni del database prima di avviare l'applicazione.
 
@@ -389,22 +424,30 @@ exec npm start
 
 #### TypeORM
 
-Se il progetto usa TypeORM (presenza di `data-source.ts` o `typeorm` nelle dipendenze):
+Se il progetto usa TypeORM (presenza di `data-source.ts` o `data-source.js` o `typeorm` nelle dipendenze):
 
-```bash
-npx typeorm migration:run -d data-source.ts
-```
+**IMPORTANTE**: in produzione (dentro il container Docker), `ts-node` non e' installato (e' una devDependency). Se il progetto usa TypeScript, il file `data-source.ts` viene compilato in `dist/data-source.js` durante il build. Usa il file JS compilato:
 
-Se il file data-source ha un nome diverso, adattare il percorso.
+- **Progetto TypeScript** (ha `tsconfig.json` e build step):
+  ```bash
+  npx typeorm migration:run -d dist/data-source.js
+  ```
 
-Esempio `start.sh` completo per TypeORM:
+- **Progetto JavaScript** (nessun build step):
+  ```bash
+  npx typeorm migration:run -d data-source.js
+  ```
+
+Se il file data-source ha un nome o percorso diverso, adattarlo di conseguenza.
+
+Esempio `start.sh` completo per TypeORM (progetto TypeScript):
 ```bash
 #!/bin/sh
 set -e
 echo "Attesa database..."
 sleep 2
 echo "Esecuzione migrations TypeORM..."
-npx typeorm migration:run -d data-source.ts
+npx typeorm migration:run -d dist/data-source.js
 echo "Avvio applicazione..."
 exec npm start
 ```
@@ -528,7 +571,7 @@ Se il database e' SQLite:
 - Imposta `DATABASE_URL=file:/app/data/{project_name}.db` nel `.env.production`.
 - Le migrazioni funzionano normalmente (Prisma, Drizzle, etc.) — non serve attendere il database.
 
-## Passo 4: Variabili d'ambiente per il database
+## Passo 5: Variabili d'ambiente per il database
 
 Aggiungi le seguenti variabili al file `.env.production` (generato in `docker.md` Passo 6):
 
@@ -579,8 +622,9 @@ REDIS_URL=redis://redis:6379
 ## Riepilogo flusso
 
 1. Genera password con `openssl rand -hex 24`
-2. Genera `docker-compose.yml` con servizio app + servizio database (con healthcheck, resource limits, log rotation)
-3. Genera `start.sh` con comandi di migrazione appropriati per l'ORM rilevato
-4. Aggiungi variabili d'ambiente database a `.env.production`
-5. Aggiorna Dockerfile per usare `start.sh`
-6. Prosegui con Passo 7 di `docker.md` (Git init e push)
+2. Crea file `.env` per l'interpolazione di Docker Compose (con `DB_PASSWORD`, `PROJECT_NAME`, etc.)
+3. Genera `docker-compose.yml` con servizio app + servizio database (con healthcheck, resource limits, log rotation)
+4. Genera `start.sh` con comandi di migrazione appropriati per l'ORM rilevato
+5. Aggiungi variabili d'ambiente database a `.env.production`
+6. Aggiorna Dockerfile per usare `start.sh`
+7. Prosegui con Passo 7 di `docker.md` (Git init e push)

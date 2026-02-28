@@ -50,14 +50,10 @@ Se il progetto NON ha gia' un `Dockerfile`, generane uno in base al framework ri
 Prima di generare il Dockerfile, assicurati che `next.config.js` (o `.mjs`/`.ts`) contenga `output: 'standalone'`. Se non e' presente, aggiungilo.
 
 ```dockerfile
-FROM node:20-alpine AS deps
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-
 FROM node:20-alpine AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+COPY package*.json ./
+RUN npm ci
 COPY . .
 RUN npm run build
 
@@ -72,7 +68,7 @@ ENV PORT=3000
 CMD ["node", "server.js"]
 ```
 
-**Nota**: questo Dockerfile usa un build multi-stage per ridurre la dimensione dell'immagine finale. Lo stage `standalone` di Next.js include solo i file necessari per l'esecuzione.
+**Nota**: lo stage `builder` installa TUTTE le dipendenze (incluse le devDependencies come `next`) perche' sono necessarie per il build. Lo stage `runner` copia solo l'output `standalone`, che include gia' le dipendenze di produzione necessarie, riducendo la dimensione dell'immagine finale.
 
 ### Express / Node.js backend
 
@@ -176,10 +172,14 @@ FROM node:{NODE_VERSION}-alpine
 WORKDIR /app
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/package.json ./
+COPY --from=builder /app/package-lock.json ./
+RUN npm ci --only=production
 EXPOSE 3000
 ENV PORT=3000
 CMD ["node", "build"]
 ```
+
+**Nota**: a differenza di Next.js standalone, l'output di SvelteKit con `adapter-node` richiede `node_modules` a runtime. E' necessario installare le dipendenze di produzione nello stage runner.
 
 ### Astro SSR
 
@@ -195,10 +195,13 @@ FROM node:{NODE_VERSION}-alpine
 WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
-EXPOSE 4321
-ENV PORT=4321
+EXPOSE 3000
+ENV PORT=3000
+ENV HOST=0.0.0.0
 CMD ["node", "./dist/server/entry.mjs"]
 ```
+
+**Nota**: Astro usa la porta 4321 in sviluppo, ma in produzione usiamo la porta 3000 per coerenza con gli altri framework e con il template `docker-compose.yml` (che usa `${APP_PORT:-3000}:3000` come default). La variabile `PORT=3000` viene letta da Astro SSR per il binding.
 
 ### Se il Dockerfile esiste gia'
 
@@ -298,10 +301,9 @@ Raccogli tutte le variabili d'ambiente necessarie dal report dell'analisi (campo
    - MongoDB: `mongodb://app:{DB_PASSWORD}@db:27017/{project_name}?authSource=admin`
 
 4. **PORT** deve corrispondere alla porta del Dockerfile:
-   - Next.js, Nuxt, SvelteKit: `3000`
-   - Express/Node.js: la porta rilevata nel codice
+   - Next.js, Nuxt, SvelteKit, Astro: `3000`
+   - Express/Node.js: la porta rilevata nel codice (default `3000`)
    - FastAPI, Django: `8000`
-   - Astro: `4321`
 
 ### IMPORTANTE: sicurezza del file .env.production
 
@@ -355,21 +357,40 @@ Se mancano, aggiungili.
 
 ### 7.3: Commit su main
 
+**PRIMA di eseguire `git add`**, verifica che `.env.production` sia nel `.gitignore`:
+
+```bash
+grep -q '\.env\.production' .gitignore
+```
+
+Se il grep fallisce (`.env.production` NON e' nel `.gitignore`), aggiungilo SUBITO:
+
+```bash
+echo '.env.production' >> .gitignore
+```
+
+Solo DOPO aver verificato il `.gitignore`, procedi con l'add e il commit:
+
 ```bash
 git add -A
-git commit -m "deploy: {project_name} via Prolato"
 ```
 
-Verifica che `.env.production` NON sia tra i file staged:
+**Controllo di sicurezza**: verifica che `.env.production` non sia stato staged per errore:
 
 ```bash
-git status
+git diff --cached --name-only | grep '.env.production'
 ```
 
-Se `.env.production` appare tra i file staged, rimuovilo:
+Se il grep trova `.env.production` tra i file staged, rimuovilo PRIMA di committare:
 
 ```bash
 git rm --cached .env.production
+```
+
+Infine, esegui il commit:
+
+```bash
+git commit -m "deploy: {project_name} via Prolato"
 ```
 
 ### 7.4: Crea repository Gitea
@@ -420,13 +441,21 @@ Dove `{remote_name}` e' `origin` o `deploy` (in base al passo 7.5).
 
 ## Passo 8: Trigger webhook
 
-### Prepara il file .env.production in base64
+### Prepara i file environment in base64
 
 ```bash
 ENV_B64=$(base64 < .env.production | tr -d '\n')
 ```
 
+Se il progetto usa un database (e' stato seguito `database.md`), codifica anche il file `.env` di Docker Compose:
+
+```bash
+COMPOSE_ENV_B64=$(base64 < .env | tr -d '\n')
+```
+
 ### Invia la richiesta di deploy
+
+**Senza database:**
 
 ```bash
 curl -s -X POST "{WEBHOOK_URL}/deploy" \
@@ -443,9 +472,28 @@ curl -s -X POST "{WEBHOOK_URL}/deploy" \
     }'
 ```
 
+**Con database:**
+
+```bash
+curl -s -X POST "{WEBHOOK_URL}/deploy" \
+    -H "Authorization: Bearer {DEPLOY_TOKEN}" \
+    -H "Content-Type: application/json" \
+    -d '{
+        "project_name": "{project_name}",
+        "git_repo_url": "git@git.{DOMINIO}:{username}/{project_name}.git",
+        "branch": "main",
+        "deploy_type": "docker",
+        "owner": "{username}",
+        "port": {PORT},
+        "env_production": "'"$ENV_B64"'",
+        "compose_env": "'"$COMPOSE_ENV_B64"'"
+    }'
+```
+
 Dove:
 - `{PORT}` → la porta interna dell'applicazione (quella esposta nel Dockerfile)
 - `env_production` → il contenuto di `.env.production` codificato in base64
+- `compose_env` → il contenuto di `.env` (per interpolazione Docker Compose) codificato in base64, presente solo quando il progetto usa un database
 
 Verifica la risposta:
 - Se `status` e' `success` o il codice HTTP e' `200`/`201` → deploy avviato con successo.
