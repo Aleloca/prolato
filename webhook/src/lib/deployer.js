@@ -19,7 +19,7 @@ export class Deployer {
       const existing = await this.registry.getProject(project_name);
 
       if (existing && existing.owner !== owner) {
-        throw new Error(`Il progetto ${project_name} appartiene a ${existing.owner}`);
+        throw new Error(`Project ${project_name} belongs to ${existing.owner}`);
       }
 
       const isUpdate = existing !== null;
@@ -200,8 +200,8 @@ export class Deployer {
 
   async rollback(projectName) {
     const project = await this.registry.getProject(projectName);
-    if (!project) throw new Error('Progetto non trovato');
-    if (!project.previous_sha) throw new Error('Nessun deploy precedente disponibile per il rollback');
+    if (!project) throw new Error('Project not found');
+    if (!project.previous_sha) throw new Error('No previous deploy available for rollback');
 
     this.lock.acquire(projectName);
 
@@ -243,7 +243,7 @@ export class Deployer {
 
   async deleteProject(projectName) {
     const project = await this.registry.getProject(projectName);
-    if (!project) throw new Error('Progetto non trovato');
+    if (!project) throw new Error('Project not found');
 
     const projectPath = this._getProjectPath(project, projectName);
 
@@ -272,8 +272,8 @@ export class Deployer {
 
   async getProjectLogs(projectName, lines = 50) {
     const project = await this.registry.getProject(projectName);
-    if (!project) throw new Error('Progetto non trovato');
-    if (project.deploy_type !== 'docker') throw new Error('Logs disponibili solo per progetti Docker');
+    if (!project) throw new Error('Project not found');
+    if (project.deploy_type !== 'docker') throw new Error('Logs only available for Docker projects');
 
     const projectPath = this._getProjectPath(project, projectName);
     const logs = await this.shell.exec(
@@ -284,7 +284,7 @@ export class Deployer {
 
   async getProjectStatus(projectName) {
     const project = await this.registry.getProject(projectName);
-    if (!project) throw new Error('Progetto non trovato');
+    if (!project) throw new Error('Project not found');
 
     const projectPath = this._getProjectPath(project, projectName);
 

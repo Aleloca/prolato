@@ -9,15 +9,15 @@ describe('validateProjectName', () => {
   });
 
   it('rejects names with uppercase', () => {
-    expect(() => validateProjectName('MyApp')).toThrow('solo lettere minuscole');
+    expect(() => validateProjectName('MyApp')).toThrow('only lowercase');
   });
 
   it('rejects names with underscores', () => {
-    expect(() => validateProjectName('my_app')).toThrow('solo lettere minuscole');
+    expect(() => validateProjectName('my_app')).toThrow('only lowercase');
   });
 
   it('rejects names with spaces', () => {
-    expect(() => validateProjectName('my app')).toThrow('solo lettere minuscole');
+    expect(() => validateProjectName('my app')).toThrow('only lowercase');
   });
 
   it('rejects empty names', () => {
@@ -25,7 +25,7 @@ describe('validateProjectName', () => {
   });
 
   it('rejects names longer than 63 characters', () => {
-    expect(() => validateProjectName('a'.repeat(64))).toThrow('massimo 63 caratteri');
+    expect(() => validateProjectName('a'.repeat(64))).toThrow('maximum 63 characters');
   });
 
   it('rejects names starting with hyphen', () => {

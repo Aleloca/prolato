@@ -112,7 +112,7 @@ describe('Deployer', () => {
 
     it('rejects deploy when different owner', async () => {
       await deployer.deploy(payload);
-      await expect(deployer.deploy({ ...payload, owner: 'bob' })).rejects.toThrow('appartiene a');
+      await expect(deployer.deploy({ ...payload, owner: 'bob' })).rejects.toThrow('belongs to');
     });
 
     it('saves current_sha from git rev-parse HEAD', async () => {
@@ -238,11 +238,11 @@ describe('Deployer', () => {
         deploy_type: 'static',
         owner: 'alice',
       });
-      await expect(deployer.rollback('new-site')).rejects.toThrow('Nessun deploy precedente');
+      await expect(deployer.rollback('new-site')).rejects.toThrow('No previous deploy');
     });
 
     it('rejects rollback for non-existent project', async () => {
-      await expect(deployer.rollback('nope')).rejects.toThrow('non trovato');
+      await expect(deployer.rollback('nope')).rejects.toThrow('not found');
     });
   });
 
@@ -262,13 +262,13 @@ describe('Deployer', () => {
     });
 
     it('rejects delete for non-existent project', async () => {
-      await expect(deployer.deleteProject('nope')).rejects.toThrow('non trovato');
+      await expect(deployer.deleteProject('nope')).rejects.toThrow('not found');
     });
   });
 
   describe('getProjectLogs', () => {
     it('rejects for non-existent project', async () => {
-      await expect(deployer.getProjectLogs('nope')).rejects.toThrow('non trovato');
+      await expect(deployer.getProjectLogs('nope')).rejects.toThrow('not found');
     });
 
     it('rejects for static project', async () => {
@@ -279,13 +279,13 @@ describe('Deployer', () => {
         deploy_type: 'static',
         owner: 'alice',
       });
-      await expect(deployer.getProjectLogs('static-site')).rejects.toThrow('solo per progetti Docker');
+      await expect(deployer.getProjectLogs('static-site')).rejects.toThrow('only available for Docker');
     });
   });
 
   describe('getProjectStatus', () => {
     it('rejects for non-existent project', async () => {
-      await expect(deployer.getProjectStatus('nope')).rejects.toThrow('non trovato');
+      await expect(deployer.getProjectStatus('nope')).rejects.toThrow('not found');
     });
   });
 });

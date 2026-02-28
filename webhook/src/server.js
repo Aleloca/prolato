@@ -40,10 +40,10 @@ export function createApp({ config, registry, lock, logger, caddy, shell }) {
       const result = await deployer.getProjectLogs(req.params.name, lines);
       res.json(result);
     } catch (err) {
-      if (err.message === 'Progetto non trovato') {
+      if (err.message === 'Project not found') {
         return res.status(404).json({ error: err.message });
       }
-      if (err.message === 'Logs disponibili solo per progetti Docker') {
+      if (err.message === 'Logs only available for Docker projects') {
         return res.status(400).json({ error: err.message });
       }
       res.status(500).json({ error: err.message });
@@ -56,7 +56,7 @@ export function createApp({ config, registry, lock, logger, caddy, shell }) {
       const result = await deployer.getProjectStatus(req.params.name);
       res.json(result);
     } catch (err) {
-      if (err.message === 'Progetto non trovato') {
+      if (err.message === 'Project not found') {
         return res.status(404).json({ error: err.message });
       }
       res.status(500).json({ error: err.message });
@@ -69,10 +69,10 @@ export function createApp({ config, registry, lock, logger, caddy, shell }) {
       const result = await deployer.rollback(req.params.name);
       res.json(result);
     } catch (err) {
-      if (err.message === 'Progetto non trovato') {
+      if (err.message === 'Project not found') {
         return res.status(404).json({ error: err.message });
       }
-      if (err.message === 'Nessun deploy precedente disponibile per il rollback') {
+      if (err.message === 'No previous deploy available for rollback') {
         return res.status(400).json({ error: err.message });
       }
       res.status(500).json({ error: err.message });
@@ -85,7 +85,7 @@ export function createApp({ config, registry, lock, logger, caddy, shell }) {
       const result = await deployer.deleteProject(req.params.name);
       res.json(result);
     } catch (err) {
-      if (err.message === 'Progetto non trovato') {
+      if (err.message === 'Project not found') {
         return res.status(404).json({ error: err.message });
       }
       res.status(500).json({ error: err.message });
@@ -97,7 +97,7 @@ export function createApp({ config, registry, lock, logger, caddy, shell }) {
     try {
       const project = await registry.getProject(req.params.name);
       if (!project) {
-        return res.status(404).json({ error: 'Progetto non trovato' });
+        return res.status(404).json({ error: 'Project not found' });
       }
       res.json({ project });
     } catch (err) {
@@ -120,7 +120,7 @@ export function createApp({ config, registry, lock, logger, caddy, shell }) {
       if (err.message.startsWith('Deploy already in progress')) {
         return res.status(409).json({ error: err.message });
       }
-      if (err.message.includes('appartiene a')) {
+      if (err.message.includes('belongs to')) {
         return res.status(403).json({ error: err.message });
       }
       res.status(500).json({ error: err.message });

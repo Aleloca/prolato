@@ -1,44 +1,44 @@
 # Prolato
 
-Piattaforma self-hosted per il deploy automatico di progetti web, integrata come skill di Claude Code.
+Self-hosted platform for automatic web project deployment, integrated as a Claude Code skill.
 
-## Cosa fa Prolato
+## What Prolato Does
 
-- **Analizza automaticamente** il framework e il database del tuo progetto
-- **Deploya progetti statici e Docker** con un singolo comando
-- **Genera URL istantanei** con sottodominio automatico (es. `mio-progetto.tuodominio.dev`)
-- **Gestione completa**: rollback, logs, stato, eliminazione
+- **Automatically analyzes** your project's framework and database
+- **Deploys static and Docker projects** with a single command
+- **Generates instant URLs** with automatic subdomains (e.g., `my-project.yourdomain.dev`)
+- **Full management**: rollback, logs, status, deletion
 
-## Quick start
+## Quick Start
 
-Consulta la [documentazione completa](https://prolato.dev/docs/overview) per iniziare.
+See the [full documentation](https://prolato.dev/docs/overview) to get started.
 
-## Struttura del repository
+## Repository Structure
 
 ```
 prolato/
-├── webhook/     # Server Node.js/Express per gestire i deploy
-├── skill/       # Skill Claude Code (file Markdown di istruzioni)
-├── setup/       # Script di provisioning VPS
-└── webapp/      # Sito web Next.js con documentazione
+├── webhook/     # Node.js/Express server to handle deployments
+├── skill/       # Claude Code skill (Markdown instruction files)
+├── setup/       # VPS provisioning script
+└── webapp/      # Next.js website with documentation
 ```
 
-## Requisiti
+## Requirements
 
-- VPS con Ubuntu 22.04+ (o Debian 12+)
-- Dominio con DNS su Cloudflare
-- Claude Code installato
+- VPS with Ubuntu 22.04+ (or Debian 12+)
+- Domain with DNS on Cloudflare
+- Claude Code installed
 
-## Come funziona
+## How It Works
 
-1. Configura il VPS con lo script di setup
-2. Installa la skill Prolato in Claude Code
-3. Nella cartella del tuo progetto, di' a Claude: *"deploya questo progetto"*
+1. Set up the VPS with the setup script
+2. Install the Prolato skill in Claude Code
+3. In your project folder, tell Claude: *"deploy this project"*
 
-## Documentazione
+## Documentation
 
-La documentazione completa è disponibile su [prolato.dev/docs](https://prolato.dev/docs/overview).
+Full documentation is available at [prolato.dev/docs](https://prolato.dev/docs/overview).
 
-## Licenza
+## License
 
 [MIT](LICENSE)
