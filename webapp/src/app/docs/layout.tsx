@@ -18,7 +18,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           <button
             onClick={() => setSidebarOpen(true)}
             className="rounded-md border border-slate-700 bg-slate-900 p-1.5 text-slate-300 transition-colors hover:bg-slate-800"
-            aria-label="Apri menu"
+            aria-label="Open menu"
           >
             <svg
               className="h-5 w-5"
@@ -77,13 +77,13 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                   d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
                 />
               </svg>
-              Torna alla home
+              Back to home
             </Link>
             {/* Close button on mobile */}
             <button
               onClick={() => setSidebarOpen(false)}
               className="rounded-md p-1 text-slate-400 transition-colors hover:text-slate-200 lg:hidden"
-              aria-label="Chiudi menu"
+              aria-label="Close menu"
             >
               <svg
                 className="h-5 w-5"

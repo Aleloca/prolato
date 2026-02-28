@@ -8,7 +8,7 @@ import {
   useCallback,
 } from "react";
 
-const DEFAULT_DOMAIN = "tuodominio.dev";
+const DEFAULT_DOMAIN = "yourdomain.dev";
 const STORAGE_KEY = "prolato-domain";
 
 interface DomainContextValue {

@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Prolato — Deploy Automatico",
+  title: "Prolato — Automatic Deployment",
   description:
-    "Piattaforma self-hosted per il deploy automatico di progetti web. Claude Code skill per deployare qualsiasi progetto con un comando.",
+    "Self-hosted platform for automatic web project deployment. Claude Code skill to deploy any project with a single command.",
 };
 
 export default function RootLayout({
@@ -24,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="it" className="dark">
+    <html lang="en" className="dark">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

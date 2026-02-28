@@ -15,33 +15,33 @@ interface NavSection {
 
 const sections: NavSection[] = [
   {
-    title: "Panoramica",
-    items: [{ label: "Introduzione", href: "/docs/overview" }],
+    title: "Overview",
+    items: [{ label: "Introduction", href: "/docs/overview" }],
   },
   {
-    title: "Setup VPS",
+    title: "VPS Setup",
     items: [
-      { label: "1. DNS e Dominio", href: "/docs/setup/dns" },
-      { label: "2. Server VPS", href: "/docs/setup/vps" },
+      { label: "1. DNS & Domain", href: "/docs/setup/dns" },
+      { label: "2. VPS Server", href: "/docs/setup/vps" },
       { label: "3. Caddy", href: "/docs/setup/caddy" },
       { label: "4. Gitea", href: "/docs/setup/gitea" },
       { label: "5. Docker", href: "/docs/setup/docker" },
       { label: "6. Webhook", href: "/docs/setup/webhook" },
-      { label: "7. Verifica", href: "/docs/setup/verify" },
+      { label: "7. Verify", href: "/docs/setup/verify" },
     ],
   },
   {
-    title: "Skill Claude Code",
+    title: "Claude Code Skill",
     items: [
-      { label: "Installazione", href: "/docs/skill/install" },
-      { label: "Utilizzo", href: "/docs/skill/usage" },
+      { label: "Installation", href: "/docs/skill/install" },
+      { label: "Usage", href: "/docs/skill/usage" },
     ],
   },
   {
-    title: "Manutenzione",
+    title: "Maintenance",
     items: [
-      { label: "Backup Database", href: "/docs/maintenance/backup" },
-      { label: "Comportamento al Reboot", href: "/docs/maintenance/reboot" },
+      { label: "Database Backup", href: "/docs/maintenance/backup" },
+      { label: "Reboot Behavior", href: "/docs/maintenance/reboot" },
     ],
   },
 ];

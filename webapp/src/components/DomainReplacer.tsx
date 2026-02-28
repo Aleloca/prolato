@@ -4,7 +4,7 @@ import { useDomain } from "@/lib/useDomain";
 
 export default function DomainReplacer() {
   const { domain, setDomain, resetDomain } = useDomain();
-  const isCustom = domain !== "tuodominio.dev";
+  const isCustom = domain !== "yourdomain.dev";
 
   return (
     <div className="px-4 py-4">
@@ -12,21 +12,21 @@ export default function DomainReplacer() {
         htmlFor="domain-input"
         className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400"
       >
-        Il tuo dominio
+        Your domain
       </label>
       <div className="flex items-center gap-2">
         <input
           id="domain-input"
           type="text"
           value={isCustom ? domain : ""}
-          placeholder="tuodominio.dev"
+          placeholder="yourdomain.dev"
           onChange={(e) => setDomain(e.target.value)}
           className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-1.5 font-mono text-sm text-slate-200 placeholder-slate-500 outline-none transition-colors focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30"
         />
         {isCustom && (
           <button
             onClick={resetDomain}
-            title="Ripristina dominio predefinito"
+            title="Reset to default domain"
             className="flex-shrink-0 rounded-md border border-slate-700 bg-slate-800 p-1.5 text-slate-400 transition-colors hover:border-slate-600 hover:text-slate-200"
           >
             <svg
@@ -47,7 +47,7 @@ export default function DomainReplacer() {
       </div>
       {isCustom && (
         <p className="mt-1.5 text-xs text-cyan-400/70">
-          I domini nelle guide verranno sostituiti con{" "}
+          Domains in the guides will be replaced with{" "}
           <span className="font-mono font-semibold">{domain}</span>
         </p>
       )}

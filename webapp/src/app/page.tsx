@@ -26,13 +26,13 @@ export default function Home() {
             </h1>
 
             <p className="mx-auto mt-6 max-w-2xl text-xl leading-relaxed text-slate-300 sm:text-2xl">
-              Deploy automatico per progetti web
+              Automatic deployment for web projects
             </p>
 
             <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-slate-400">
-              Piattaforma self-hosted che analizza, builda e deploya qualsiasi
-              progetto web con un singolo comando. Integrata come skill di
-              Claude Code.
+              Self-hosted platform that analyzes, builds, and deploys any
+              web project with a single command. Integrated as a Claude
+              Code skill.
             </p>
 
             {/* CTA Buttons */}
@@ -54,7 +54,7 @@ export default function Home() {
                     d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                   />
                 </svg>
-                Guida al Setup
+                Setup Guide
               </a>
               <a
                 href="https://github.com/user/prolato"
@@ -80,10 +80,10 @@ export default function Home() {
       <section className="relative py-20">
         <div className="mx-auto max-w-6xl px-6">
           <h2 className="animate-fade-in-up-delay-1 mb-4 text-center text-sm font-semibold uppercase tracking-widest text-cyan-400">
-            Come funziona il deploy
+            How deployment works
           </h2>
           <p className="animate-fade-in-up-delay-2 mx-auto mb-16 max-w-lg text-center text-slate-400">
-            Dal codice sorgente al sito online in pochi secondi
+            From source code to live site in seconds
           </p>
 
           {/* Flow steps */}
@@ -95,7 +95,7 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                   </svg>
                 ),
-                label: "Analizza",
+                label: "Analyze",
                 desc: "Framework detection",
               },
               {
@@ -105,7 +105,7 @@ export default function Home() {
                   </svg>
                 ),
                 label: "Build",
-                desc: "Compilazione",
+                desc: "Compilation",
               },
               {
                 icon: (
@@ -123,7 +123,7 @@ export default function Home() {
                   </svg>
                 ),
                 label: "Deploy",
-                desc: "Container / Statico",
+                desc: "Container / Static",
               },
               {
                 icon: (
@@ -132,7 +132,7 @@ export default function Home() {
                   </svg>
                 ),
                 label: "URL",
-                desc: "progetto.tuodominio.it",
+                desc: "project.yourdomain.dev",
               },
             ].map((step, i, arr) => (
               <div key={step.label} className="flex items-center gap-3 sm:gap-0">
@@ -172,17 +172,17 @@ export default function Home() {
       <section className="relative py-20">
         <div className="mx-auto max-w-6xl px-6">
           <h2 className="animate-fade-in-up mb-4 text-center text-sm font-semibold uppercase tracking-widest text-cyan-400">
-            Funzionalit&agrave;
+            Features
           </h2>
           <p className="animate-fade-in-up-delay-1 mx-auto mb-16 max-w-lg text-center text-slate-400">
-            Tutto quello che serve per deployare i tuoi progetti
+            Everything you need to deploy your projects
           </p>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
               {
                 title: "Zero Config",
-                desc: "Analisi automatica del framework. Rileva Next.js, React, Vue, Astro, Go, Python e molti altri senza configurazione.",
+                desc: "Automatic framework analysis. Detects Next.js, React, Vue, Astro, Go, Python, and many others with zero configuration.",
                 icon: (
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
@@ -190,8 +190,8 @@ export default function Home() {
                 ),
               },
               {
-                title: "Deploy Universale",
-                desc: "Supporto per siti statici e applicazioni Docker. Output statico servito via Caddy, container gestiti con Docker Compose.",
+                title: "Universal Deploy",
+                desc: "Support for static sites and Docker applications. Static output served via Caddy, containers managed with Docker Compose.",
                 icon: (
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375" />
@@ -199,8 +199,8 @@ export default function Home() {
                 ),
               },
               {
-                title: "URL Istantaneo",
-                desc: "Sottodominio automatico per ogni progetto. Il tuo sito disponibile su progetto.tuodominio.it in pochi secondi.",
+                title: "Instant URL",
+                desc: "Automatic subdomain for every project. Your site available at project.yourdomain.dev in seconds.",
                 icon: (
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-2.54a4.5 4.5 0 00-1.242-7.244l-4.5-4.5a4.5 4.5 0 00-6.364 6.364L6.1 8.588" />
@@ -208,8 +208,8 @@ export default function Home() {
                 ),
               },
               {
-                title: "Versionamento Git",
-                desc: "Repository Gitea incluso. Ogni deploy viene versionato automaticamente con cronologia completa dei rilasci.",
+                title: "Git Versioning",
+                desc: "Gitea repository included. Every deploy is automatically versioned with a complete release history.",
                 icon: (
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
@@ -217,8 +217,8 @@ export default function Home() {
                 ),
               },
               {
-                title: "Supporto Database",
-                desc: "PostgreSQL, MySQL, MongoDB e Redis. Provisioning automatico dei database con credenziali e variabili d'ambiente.",
+                title: "Database Support",
+                desc: "PostgreSQL, MySQL, MongoDB, and Redis. Automatic database provisioning with credentials and environment variables.",
                 icon: (
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75" />
@@ -227,7 +227,7 @@ export default function Home() {
               },
               {
                 title: "Rollback",
-                desc: "Torna alla versione precedente in un istante. Ogni deploy è un tag Git, il rollback è un singolo comando.",
+                desc: "Revert to the previous version instantly. Every deploy is a Git tag, rollback is a single command.",
                 icon: (
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
@@ -263,31 +263,31 @@ export default function Home() {
       <section className="relative py-20">
         <div className="mx-auto max-w-6xl px-6">
           <h2 className="animate-fade-in-up mb-4 text-center text-sm font-semibold uppercase tracking-widest text-cyan-400">
-            Tre passi
+            Three steps
           </h2>
           <p className="animate-fade-in-up-delay-1 mx-auto mb-16 max-w-lg text-center text-slate-400">
-            Dall&apos;installazione al deploy in meno di un minuto
+            From installation to deploy in under a minute
           </p>
 
           <div className="grid gap-8 sm:grid-cols-3">
             {[
               {
                 step: "01",
-                title: "Installa la skill",
-                desc: "Aggiungi la skill Prolato al tuo Claude Code. Un solo comando per configurare tutto.",
+                title: "Install the skill",
+                desc: "Add the Prolato skill to your Claude Code. A single command to configure everything.",
                 code: "claude mcp add prolato",
               },
               {
                 step: "02",
-                title: 'Di\' "deploya questo progetto"',
-                desc: "Claude analizza il tuo progetto, sceglie la strategia di deploy e prepara tutto automaticamente.",
-                code: '"Deploya questo progetto"',
+                title: 'Say "deploy this project"',
+                desc: "Claude analyzes your project, chooses the deploy strategy, and prepares everything automatically.",
+                code: '"Deploy this project"',
               },
               {
                 step: "03",
-                title: "Il tuo sito è online",
-                desc: "Ricevi l'URL del tuo progetto. Sottodominio configurato, HTTPS attivo, tutto pronto.",
-                code: "https://miosito.example.com",
+                title: "Your site is live",
+                desc: "Get your project URL. Subdomain configured, HTTPS active, everything ready.",
+                code: "https://mysite.example.com",
               },
             ].map((item) => (
               <div key={item.step} className="group text-center">
@@ -322,22 +322,22 @@ export default function Home() {
       <section className="relative py-20">
         <div className="mx-auto max-w-6xl px-6 text-center">
           <h2 className="text-3xl font-bold text-slate-100 sm:text-4xl">
-            Pronto per{" "}
+            Ready to{" "}
             <span className="bg-gradient-to-r from-cyan-300 to-teal-300 bg-clip-text text-transparent">
-              deployare
+              deploy
             </span>
             ?
           </h2>
           <p className="mx-auto mt-4 max-w-md text-slate-400">
-            Configura il tuo server e inizia a deployare progetti con un singolo
-            comando.
+            Set up your server and start deploying projects with a single
+            command.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <a
               href="/docs/setup/dns"
               className="inline-flex items-center gap-2 rounded-lg bg-cyan-500 px-6 py-3 font-medium text-slate-950 transition-all hover:bg-cyan-400 hover:shadow-[0_0_24px_rgba(34,211,238,0.3)]"
             >
-              Inizia il Setup
+              Start Setup
             </a>
             <a
               href="https://github.com/user/prolato"
@@ -345,7 +345,7 @@ export default function Home() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/60 px-6 py-3 font-medium text-slate-200 transition-all hover:border-slate-600 hover:bg-slate-800/80"
             >
-              Vedi su GitHub
+              View on GitHub
             </a>
           </div>
         </div>
@@ -361,7 +361,7 @@ export default function Home() {
               </span>
               <span className="text-xs text-slate-600">&mdash;</span>
               <span className="text-xs text-slate-500">
-                Deploy automatico per progetti web
+                Automatic deployment for web projects
               </span>
             </div>
             <div className="text-xs text-slate-500">MIT License</div>
