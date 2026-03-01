@@ -17,6 +17,14 @@ export function createApp({ config, registry, lock, logger, caddy, shell }) {
   });
   app.use(limiter);
 
+  app.disable('x-powered-by');
+  app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    next();
+  });
+
   const auth = createAuthMiddleware(config.deployToken);
   const deployer = new Deployer({ registry, lock, logger, caddy, shell, config });
 
