@@ -232,12 +232,37 @@ describe('Server', () => {
 
   describe('Rate limiting', () => {
     it('returns 429 after too many requests', async () => {
+      // Use a dedicated app to avoid rate limiter state leaking to other tests
+      const rateTempDir = mkdtempSync(join(tmpdir(), 'prolato-rate-test-'));
+      const rateCaddyDir = join(rateTempDir, 'caddy');
+      mkdirSync(rateCaddyDir, { recursive: true });
+      const rateConfig = {
+        deployToken: 'test-token-12345',
+        domain: 'example.dev',
+        projectsDir: join(rateTempDir, 'projects'),
+        dockerProjectsDir: join(rateTempDir, 'docker-projects'),
+        giteaUrl: 'https://git.example.dev',
+      };
+      const rateRegistry = new Registry(join(rateTempDir, 'registry.json'));
+      const rateMockShell = { exec: async () => '', execSafe: async () => 'abc123\n' };
+      const rateCaddy = new CaddyManager(rateCaddyDir, rateConfig.domain, rateMockShell);
+      const rateApp = createApp({
+        config: rateConfig,
+        registry: rateRegistry,
+        lock: new DeployLock(),
+        logger: new DeployLogger(join(rateTempDir, 'deploy-log.jsonl')),
+        caddy: rateCaddy,
+        shell: rateMockShell,
+      });
+
       const promises = Array.from({ length: 110 }, () =>
-        request(app).get('/health')
+        request(rateApp).get('/health')
       );
       const responses = await Promise.all(promises);
       const tooMany = responses.filter(r => r.status === 429);
       expect(tooMany.length).toBeGreaterThan(0);
+
+      rmSync(rateTempDir, { recursive: true, force: true });
     });
   });
 
