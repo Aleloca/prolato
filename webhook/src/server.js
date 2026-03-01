@@ -6,7 +6,7 @@ import { Deployer } from './lib/deployer.js';
 
 export function createApp({ config, registry, lock, logger, caddy, shell }) {
   const app = express();
-  app.use(express.json({ limit: '50mb' }));
+  app.use(express.json({ limit: '1mb' }));
 
   const limiter = rateLimit({
     windowMs: 60 * 1000,

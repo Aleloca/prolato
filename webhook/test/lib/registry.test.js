@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Registry } from '../../src/lib/registry.js';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -112,6 +112,18 @@ describe('Registry', () => {
       const projects = await registry.listProjects('alice');
       expect(Object.keys(projects)).toHaveLength(1);
       expect(projects['app-1'].owner).toBe('alice');
+    });
+  });
+
+  describe('atomic writes', () => {
+    it('writes atomically (uses temp file + rename)', async () => {
+      await registry.addProject('atomic-test', { owner: 'alice', deploy_type: 'static' });
+      // Verify no .tmp files left behind
+      const files = readdirSync(tempDir);
+      expect(files.some(f => f.endsWith('.tmp'))).toBe(false);
+      // Verify data persisted correctly
+      const project = await registry.getProject('atomic-test');
+      expect(project.owner).toBe('alice');
     });
   });
 

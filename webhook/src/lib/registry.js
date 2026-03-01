@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, renameSync } from 'node:fs';
 import { dirname } from 'node:path';
 import lockfile from 'proper-lockfile';
 
@@ -22,7 +22,9 @@ export class Registry {
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
     }
-    writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf-8');
+    const tmpPath = this.filePath + '.tmp';
+    writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf-8');
+    renameSync(tmpPath, this.filePath);
   }
 
   async _withLock(fn) {
