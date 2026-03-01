@@ -116,6 +116,58 @@ describe('Server', () => {
     });
   });
 
+  describe('Authorization', () => {
+    it('DELETE /projects/:name rejects when project belongs to different owner', async () => {
+      const registry = app.locals.registry;
+      await registry.addProject('alice-app', { owner: 'alice', deploy_type: 'static' });
+
+      const res = await request(app)
+        .delete('/projects/alice-app?owner=bob')
+        .set('Authorization', 'Bearer test-token-12345');
+      expect(res.status).toBe(403);
+    });
+
+    it('POST /projects/:name/rollback rejects when project belongs to different owner', async () => {
+      const registry = app.locals.registry;
+      await registry.addProject('alice-app', {
+        owner: 'alice',
+        deploy_type: 'static',
+        previous_sha: 'abc123',
+        current_sha: 'def456',
+      });
+
+      const res = await request(app)
+        .post('/projects/alice-app/rollback?owner=bob')
+        .set('Authorization', 'Bearer test-token-12345');
+      expect(res.status).toBe(403);
+    });
+
+    it('DELETE /projects/:name requires owner query parameter', async () => {
+      const registry = app.locals.registry;
+      await registry.addProject('alice-app', { owner: 'alice', deploy_type: 'static' });
+
+      const res = await request(app)
+        .delete('/projects/alice-app')
+        .set('Authorization', 'Bearer test-token-12345');
+      expect(res.status).toBe(400);
+    });
+
+    it('POST /projects/:name/rollback requires owner', async () => {
+      const registry = app.locals.registry;
+      await registry.addProject('alice-app', {
+        owner: 'alice',
+        deploy_type: 'static',
+        previous_sha: 'abc123',
+        current_sha: 'def456',
+      });
+
+      const res = await request(app)
+        .post('/projects/alice-app/rollback')
+        .set('Authorization', 'Bearer test-token-12345');
+      expect(res.status).toBe(400);
+    });
+  });
+
   describe('POST /deploy', () => {
     it('returns 400 for invalid payload', async () => {
       const res = await request(app)
@@ -145,7 +197,7 @@ describe('Server', () => {
   describe('POST /projects/:name/rollback', () => {
     it('returns 404 for non-existent project', async () => {
       const res = await request(app)
-        .post('/projects/nope/rollback')
+        .post('/projects/nope/rollback?owner=alice')
         .set('Authorization', 'Bearer test-token-12345');
       expect(res.status).toBe(404);
     });
@@ -154,7 +206,7 @@ describe('Server', () => {
   describe('DELETE /projects/:name', () => {
     it('returns 404 for non-existent project', async () => {
       const res = await request(app)
-        .delete('/projects/nope')
+        .delete('/projects/nope?owner=alice')
         .set('Authorization', 'Bearer test-token-12345');
       expect(res.status).toBe(404);
     });

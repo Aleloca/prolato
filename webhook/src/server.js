@@ -66,6 +66,17 @@ export function createApp({ config, registry, lock, logger, caddy, shell }) {
   // POST /projects/:name/rollback — MUST be before GET /projects/:name
   app.post('/projects/:name/rollback', async (req, res) => {
     try {
+      const owner = req.query.owner || (req.body && req.body.owner);
+      if (!owner) {
+        return res.status(400).json({ error: 'owner is required' });
+      }
+      const project = await registry.getProject(req.params.name);
+      if (!project) {
+        return res.status(404).json({ error: 'Project not found' });
+      }
+      if (project.owner !== owner) {
+        return res.status(403).json({ error: 'Forbidden: project belongs to another owner' });
+      }
       const result = await deployer.rollback(req.params.name);
       res.json(result);
     } catch (err) {
@@ -82,6 +93,17 @@ export function createApp({ config, registry, lock, logger, caddy, shell }) {
   // DELETE /projects/:name
   app.delete('/projects/:name', async (req, res) => {
     try {
+      const owner = req.query.owner;
+      if (!owner) {
+        return res.status(400).json({ error: 'owner query parameter is required' });
+      }
+      const project = await registry.getProject(req.params.name);
+      if (!project) {
+        return res.status(404).json({ error: 'Project not found' });
+      }
+      if (project.owner !== owner) {
+        return res.status(403).json({ error: 'Forbidden: project belongs to another owner' });
+      }
       const result = await deployer.deleteProject(req.params.name);
       res.json(result);
     } catch (err) {
