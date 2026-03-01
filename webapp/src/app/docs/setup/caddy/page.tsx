@@ -110,9 +110,9 @@ EOF`)}</code></pre>
         Here&apos;s what each block does:
       </p>
       <ul>
-        <li>{replaceDomain("<strong>yourdomain.dev</strong> — main domain, shows a confirmation message")}</li>
-        <li>{replaceDomain("<strong>git.yourdomain.dev</strong> — proxy to Gitea (port 3000)")}</li>
-        <li>{replaceDomain("<strong>webhook.yourdomain.dev</strong> — proxy to the webhook server (port 4000)")}</li>
+        <li><strong>{replaceDomain("yourdomain.dev")}</strong> &mdash; main domain, shows a confirmation message</li>
+        <li><strong>{replaceDomain("git.yourdomain.dev")}</strong> &mdash; proxy to Gitea (port 3000)</li>
+        <li><strong>{replaceDomain("webhook.yourdomain.dev")}</strong> &mdash; proxy to the webhook server (port 4000)</li>
         <li><strong>import projects.d</strong> &mdash; automatically loads configurations for deployed projects</li>
       </ul>
 

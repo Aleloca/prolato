@@ -10,7 +10,7 @@ export default function DomainReplacer() {
     <div className="px-4 py-4">
       <label
         htmlFor="domain-input"
-        className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400"
+        className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone-400"
       >
         Your domain
       </label>
@@ -21,13 +21,13 @@ export default function DomainReplacer() {
           value={isCustom ? domain : ""}
           placeholder="yourdomain.dev"
           onChange={(e) => setDomain(e.target.value)}
-          className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-1.5 font-mono text-sm text-slate-200 placeholder-slate-500 outline-none transition-colors focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30"
+          className="w-full rounded-md border border-stone-700 bg-stone-800 px-3 py-1.5 font-mono text-sm text-stone-200 placeholder-stone-500 outline-none transition-colors focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30"
         />
         {isCustom && (
           <button
             onClick={resetDomain}
             title="Reset to default domain"
-            className="flex-shrink-0 rounded-md border border-slate-700 bg-slate-800 p-1.5 text-slate-400 transition-colors hover:border-slate-600 hover:text-slate-200"
+            className="flex-shrink-0 rounded-md border border-stone-700 bg-stone-800 p-1.5 text-stone-400 transition-colors hover:border-stone-600 hover:text-stone-200"
           >
             <svg
               className="h-4 w-4"
@@ -46,7 +46,7 @@ export default function DomainReplacer() {
         )}
       </div>
       {isCustom && (
-        <p className="mt-1.5 text-xs text-cyan-400/70">
+        <p className="mt-1.5 text-xs text-amber-400/70">
           Domains in the guides will be replaced with{" "}
           <span className="font-mono font-semibold">{domain}</span>
         </p>

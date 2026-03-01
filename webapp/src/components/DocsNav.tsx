@@ -53,7 +53,7 @@ export default function DocsNav({ onNavigate }: { onNavigate?: () => void }) {
     <nav className="flex flex-col gap-6 px-4 py-4">
       {sections.map((section) => (
         <div key={section.title}>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-slate-400">
+          <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-stone-400">
             {section.title}
           </h3>
           <ul className="flex flex-col gap-0.5">
@@ -66,8 +66,8 @@ export default function DocsNav({ onNavigate }: { onNavigate?: () => void }) {
                     onClick={onNavigate}
                     className={`block rounded-md px-3 py-1.5 text-sm transition-colors ${
                       isActive
-                        ? "border-l-2 border-cyan-400 bg-cyan-500/10 pl-[10px] font-medium text-cyan-300"
-                        : "text-slate-300 hover:bg-slate-800/60 hover:text-slate-100"
+                        ? "border-l-2 border-amber-400 bg-amber-500/10 pl-[10px] font-medium text-amber-300"
+                        : "text-stone-300 hover:bg-stone-800/60 hover:text-stone-100"
                     }`}
                   >
                     {item.label}

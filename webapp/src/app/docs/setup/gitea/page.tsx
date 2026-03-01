@@ -107,7 +107,7 @@ chmod 640 /etc/gitea/app.ini`)}</code></pre>
       <p>Here&apos;s what the main parameters do:</p>
       <ul>
         <li><code>HTTP_PORT = 3000</code> &mdash; Gitea listens on port 3000 (Caddy acts as proxy)</li>
-        <li>{replaceDomain("<code>ROOT_URL</code> — the public URL of Gitea (https://git.yourdomain.dev/)")}</li>
+        <li><code>ROOT_URL</code> &mdash; {replaceDomain("the public URL of Gitea (https://git.yourdomain.dev/)")}</li>
         <li><code>SSH_PORT = 2222</code> &mdash; separate SSH port to avoid conflicting with the system&apos;s port 22</li>
         <li><code>DISABLE_REGISTRATION = false</code> &mdash; allows users to self-register on Gitea (each user creates their own account)</li>
         <li><code>DB_TYPE = sqlite3</code> &mdash; uses SQLite as the database (no database server needed)</li>
@@ -153,9 +153,9 @@ systemctl enable --now gitea`}</code></pre>
       </p>
       <ul>
         <li>The database type is <strong>SQLite3</strong></li>
-        <li>{replaceDomain("The SSH domain is <strong>git.yourdomain.dev</strong>")}</li>
+        <li>The SSH domain is <strong>{replaceDomain("git.yourdomain.dev")}</strong></li>
         <li>The SSH port is <strong>2222</strong></li>
-        <li>{replaceDomain("The base URL is <strong>https://git.yourdomain.dev/</strong>")}</li>
+        <li>The base URL is <strong>{replaceDomain("https://git.yourdomain.dev/")}</strong></li>
       </ul>
       <p>
         Click <strong>Install Gitea</strong> at the bottom of the page to complete the setup.

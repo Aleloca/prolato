@@ -35,22 +35,16 @@ export default function OverviewPage() {
       </p>
       <ol>
         <li>
-          {replaceDomain(
-            "<strong>Caddy</strong> — reverse proxy and web server that handles automatic HTTPS for yourdomain.dev and all subdomains. Generates and renews SSL certificates via Cloudflare DNS challenge."
-          )}
+          <strong>Caddy</strong> &mdash; {replaceDomain("reverse proxy and web server that handles automatic HTTPS for yourdomain.dev and all subdomains. Generates and renews SSL certificates via Cloudflare DNS challenge.")}
         </li>
         <li>
-          {replaceDomain(
-            "<strong>Gitea</strong> — lightweight Git server accessible at git.yourdomain.dev. Hosts your project repositories and notifies the webhook on every push."
-          )}
+          <strong>Gitea</strong> &mdash; {replaceDomain("lightweight Git server accessible at git.yourdomain.dev. Hosts your project repositories and notifies the webhook on every push.")}
         </li>
         <li>
           <strong>Docker</strong> &mdash; container runtime. Each project is built as a Docker image and launched as an isolated container.
         </li>
         <li>
-          {replaceDomain(
-            "<strong>Webhook Server</strong> — Node.js service on webhook.yourdomain.dev that receives notifications from Gitea, runs the Docker build, and configures Caddy to serve the new project."
-          )}
+          <strong>Webhook Server</strong> &mdash; {replaceDomain("Node.js service on webhook.yourdomain.dev that receives notifications from Gitea, runs the Docker build, and configures Caddy to serve the new project.")}
         </li>
       </ol>
 

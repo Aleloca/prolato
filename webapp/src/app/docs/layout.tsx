@@ -12,12 +12,12 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <DomainContext.Provider value={domainState}>
-      <div className="min-h-screen bg-slate-950 text-slate-100">
+      <div className="min-h-screen bg-[#0a0a0b] text-stone-100">
         {/* Mobile top bar */}
-        <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-800/60 bg-slate-950/95 px-4 py-3 backdrop-blur lg:hidden">
+        <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-stone-800/60 bg-[#0a0a0b]/95 px-4 py-3 backdrop-blur lg:hidden">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="rounded-md border border-slate-700 bg-slate-900 p-1.5 text-slate-300 transition-colors hover:bg-slate-800"
+            className="rounded-md border border-stone-700 bg-stone-900 p-1.5 text-stone-300 transition-colors hover:bg-stone-800"
             aria-label="Open menu"
           >
             <svg
@@ -36,12 +36,12 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           </button>
           <Link
             href="/"
-            className="font-mono text-sm font-semibold text-slate-300"
+            className="font-mono text-sm font-semibold text-stone-300"
           >
             Prolato
           </Link>
-          <span className="text-xs text-slate-600">/</span>
-          <span className="text-xs text-slate-400">Docs</span>
+          <span className="text-xs text-stone-600">/</span>
+          <span className="text-xs text-stone-400">Docs</span>
         </div>
 
         {/* Mobile overlay */}
@@ -54,15 +54,15 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
 
         {/* Sidebar */}
         <aside
-          className={`fixed top-0 left-0 z-50 flex h-full w-72 flex-col border-r border-slate-800/60 bg-slate-900 transition-transform duration-200 lg:translate-x-0 ${
+          className={`fixed top-0 left-0 z-50 flex h-full w-72 flex-col border-r border-stone-800/60 bg-[#0f0e0d] transition-transform duration-200 lg:translate-x-0 ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
           {/* Sidebar header */}
-          <div className="flex items-center justify-between border-b border-slate-800/60 px-4 py-4">
+          <div className="flex items-center justify-between border-b border-stone-800/60 px-4 py-4">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-cyan-400"
+              className="inline-flex items-center gap-2 text-sm text-stone-400 transition-colors hover:text-amber-400"
             >
               <svg
                 className="h-4 w-4"
@@ -82,7 +82,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
             {/* Close button on mobile */}
             <button
               onClick={() => setSidebarOpen(false)}
-              className="rounded-md p-1 text-slate-400 transition-colors hover:text-slate-200 lg:hidden"
+              className="rounded-md p-1 text-stone-400 transition-colors hover:text-stone-200 lg:hidden"
               aria-label="Close menu"
             >
               <svg
@@ -102,7 +102,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           </div>
 
           {/* Domain replacer */}
-          <div className="border-b border-slate-800/60">
+          <div className="border-b border-stone-800/60">
             <DomainReplacer />
           </div>
 

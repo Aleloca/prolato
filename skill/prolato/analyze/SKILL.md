@@ -59,7 +59,7 @@ Produce this JSON and pass it to the deploy flow:
     "database": null,
     "deploy_strategy": "static | docker",
     "needs_docker": false,
-    "node_version": "20",
+    "node_version": "22",
     "env_vars": {}
 }
 ```

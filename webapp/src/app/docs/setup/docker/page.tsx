@@ -49,19 +49,19 @@ export default function DockerPage() {
         </p>
       </blockquote>
 
-      <h2>Step 3: Install Node.js 20</h2>
+      <h2>Step 3: Install Node.js 22</h2>
       <p>
-        The webhook server is written in Node.js. Install Node.js 20 LTS via NodeSource:
+        The webhook server is written in Node.js. Install Node.js 22 LTS via NodeSource:
       </p>
-      <pre><code>{`curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+      <pre><code>{`curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
 apt install -y nodejs`}</code></pre>
       <p>
-        Node.js 20 is the LTS (Long Term Support) version with active support until April 2026.
+        Node.js 22 is the Active LTS (Long Term Support) version with support until April 2027.
       </p>
 
       <blockquote>
         <p>
-          After this step you should be able to run <code>node --version</code> and see <code>v20.x.x</code>.
+          After this step you should be able to run <code>node --version</code> and see <code>v22.x.x</code>.
         </p>
       </blockquote>
 

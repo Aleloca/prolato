@@ -213,9 +213,9 @@ Do not proceed with the deploy until the user provides this information.
 
 Check in this order (stop at the first found):
 
-1. `.nvmrc` → contains the version (e.g., `20`, `18.17.0`).
+1. `.nvmrc` → contains the version (e.g., `22`, `20.17.0`).
 2. `.node-version` → contains the version.
-3. `engines.node` in `package.json` → contains a range (e.g., `>=18`, `^20.0.0`). Use the major version.
-4. Default: `20` (current LTS).
+3. `engines.node` in `package.json` → contains a range (e.g., `>=20`, `^22.0.0`). Use the major version.
+4. Default: `22` (current LTS).
 
-Set the `node_version` field with the major version found (e.g., `"20"`, `"18"`).
+Set the `node_version` field with the major version found (e.g., `"22"`, `"20"`).

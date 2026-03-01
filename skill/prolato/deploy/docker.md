@@ -50,14 +50,14 @@ If the project does NOT already have a `Dockerfile`, generate one based on the f
 Before generating the Dockerfile, make sure `next.config.js` (or `.mjs`/`.ts`) contains `output: 'standalone'`. If not present, add it.
 
 ```dockerfile
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=builder /app/.next/standalone ./
@@ -83,7 +83,7 @@ CMD ["node", "{entry_file}"]
 ```
 
 Where:
-- `{NODE_VERSION}` → from the `node_version` field of the report (default: `20`)
+- `{NODE_VERSION}` → from the `node_version` field of the report (default: `22`)
 - `{PORT}` → the port detected in the code (default: `3000`)
 - `{entry_file}` → the entry file (e.g., `server.js`, `index.js`, `app.js`)
 
