@@ -1,6 +1,6 @@
 import express from 'express';
 import { createAuthMiddleware } from './lib/auth.js';
-import { validateDeployPayload } from './lib/validate.js';
+import { validateDeployPayload, validateLines } from './lib/validate.js';
 import { Deployer } from './lib/deployer.js';
 
 export function createApp({ config, registry, lock, logger, caddy, shell }) {
@@ -36,7 +36,7 @@ export function createApp({ config, registry, lock, logger, caddy, shell }) {
   // GET /projects/:name/logs — MUST be before GET /projects/:name
   app.get('/projects/:name/logs', async (req, res) => {
     try {
-      const lines = parseInt(req.query.lines, 10) || 50;
+      const lines = validateLines(req.query.lines);
       const result = await deployer.getProjectLogs(req.params.name, lines);
       res.json(result);
     } catch (err) {

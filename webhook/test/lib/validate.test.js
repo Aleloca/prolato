@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { validateProjectName, validateDeployPayload } from '../../src/lib/validate.js';
+import { validateProjectName, validateDeployPayload, validateLines } from '../../src/lib/validate.js';
 
 describe('validateProjectName', () => {
   it('accepts valid names', () => {
@@ -76,5 +76,115 @@ describe('validateDeployPayload', () => {
   it('rejects missing owner', () => {
     const { owner, ...rest } = validPayload;
     expect(() => validateDeployPayload(rest)).toThrow();
+  });
+
+  describe('branch validation', () => {
+    it('rejects branch with shell metacharacters', () => {
+      expect(() => validateDeployPayload({
+        ...validPayload,
+        branch: 'main; rm -rf /',
+      })).toThrow('branch');
+    });
+
+    it('rejects branch with $() substitution', () => {
+      expect(() => validateDeployPayload({
+        ...validPayload,
+        branch: 'main$(whoami)',
+      })).toThrow('branch');
+    });
+
+    it('accepts valid branch names', () => {
+      expect(() => validateDeployPayload({
+        ...validPayload,
+        branch: 'main',
+      })).not.toThrow();
+      expect(() => validateDeployPayload({
+        ...validPayload,
+        branch: 'feature/add-login',
+      })).not.toThrow();
+      expect(() => validateDeployPayload({
+        ...validPayload,
+        branch: 'release-v1.2.3',
+      })).not.toThrow();
+    });
+  });
+
+  describe('git_repo_url validation', () => {
+    it('rejects URLs with shell metacharacters', () => {
+      expect(() => validateDeployPayload({
+        ...validPayload,
+        git_repo_url: 'git@host:repo.git; rm -rf /',
+      })).toThrow('git_repo_url');
+    });
+
+    it('accepts valid SSH git URLs', () => {
+      expect(() => validateDeployPayload({
+        ...validPayload,
+        git_repo_url: 'git@git.example.dev:alice/my-app.git',
+      })).not.toThrow();
+    });
+
+    it('accepts valid HTTPS git URLs', () => {
+      expect(() => validateDeployPayload({
+        ...validPayload,
+        git_repo_url: 'https://git.example.dev/alice/my-app.git',
+      })).not.toThrow();
+    });
+  });
+
+  describe('port validation', () => {
+    it('rejects port < 1024', () => {
+      expect(() => validateDeployPayload({
+        ...validPayload,
+        deploy_type: 'docker',
+        port: 80,
+      })).toThrow('port');
+    });
+
+    it('rejects port > 65535', () => {
+      expect(() => validateDeployPayload({
+        ...validPayload,
+        deploy_type: 'docker',
+        port: 70000,
+      })).toThrow('port');
+    });
+
+    it('rejects non-integer port', () => {
+      expect(() => validateDeployPayload({
+        ...validPayload,
+        deploy_type: 'docker',
+        port: 'abc',
+      })).toThrow('port');
+    });
+
+    it('accepts valid port', () => {
+      expect(() => validateDeployPayload({
+        ...validPayload,
+        deploy_type: 'docker',
+        port: 3000,
+      })).not.toThrow();
+    });
+  });
+});
+
+describe('validateLines', () => {
+  it('returns default 50 for undefined', () => {
+    expect(validateLines(undefined)).toBe(50);
+  });
+
+  it('returns parsed integer for valid string', () => {
+    expect(validateLines('100')).toBe(100);
+  });
+
+  it('caps at 10000', () => {
+    expect(validateLines('999999')).toBe(10000);
+  });
+
+  it('returns default for non-numeric', () => {
+    expect(validateLines('abc')).toBe(50);
+  });
+
+  it('returns default for negative', () => {
+    expect(validateLines('-5')).toBe(50);
   });
 });
