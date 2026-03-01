@@ -11,123 +11,123 @@ export default function WebhookPage() {
       <h1>6. Webhook</h1>
       <p>
         {replaceDomain(
-          "In questo step installerai il server webhook di Prolato, il componente che gestisce il deploy automatico. Il webhook riceve le notifiche da Gitea, esegue la build Docker e configura Caddy per servire il progetto su tuodominio.dev."
+          "In this step you will install the Prolato webhook server, the component that handles automatic deploys. The webhook receives notifications from Gitea, runs the Docker build, and configures Caddy to serve the project on yourdomain.dev."
         )}
       </p>
 
-      <h2>Prerequisiti</h2>
+      <h2>Prerequisites</h2>
       <ul>
-        <li>Docker e Node.js installati (step precedente)</li>
-        <li>Gitea in esecuzione con account admin e token API generato</li>
-        <li>{replaceDomain("Caddy configurato con il blocco webhook.tuodominio.dev")}</li>
+        <li>Docker and Node.js installed (previous step)</li>
+        <li>Gitea running with an admin account and API token generated</li>
+        <li>{replaceDomain("Caddy configured with the webhook.yourdomain.dev block")}</li>
       </ul>
 
-      <h2>Step 1: Clona il repository webhook</h2>
+      <h2>Step 1: Clone the webhook repository</h2>
       <p>
-        Clona il codice del server webhook nella directory dedicata:
+        Clone the webhook server code into the dedicated directory:
       </p>
       <pre><code>{`cd /opt/webhook
 git clone https://github.com/user/prolato.git .
 cd webhook
 npm install --production`}</code></pre>
       <p>
-        Il comando <code>npm install --production</code> installa solo le dipendenze necessarie per l&apos;esecuzione, senza le dipendenze di sviluppo.
+        The <code>npm install --production</code> command installs only the dependencies needed for runtime, without development dependencies.
       </p>
 
-      <h2>Step 2: Genera il token di deploy</h2>
+      <h2>Step 2: Generate the deploy token</h2>
       <p>
-        Il token di deploy e' una stringa segreta che autentica le richieste di deploy dalla skill Claude Code. Generalo con:
+        The deploy token is a secret string that authenticates deploy requests from the Claude Code skill. Generate it with:
       </p>
       <pre><code>openssl rand -hex 32</code></pre>
       <p>
-        Copia il valore generato &mdash; ti servira' nel prossimo step. Questo token e' come una password: chiunque lo possieda puo' deployare sul tuo server.
+        Copy the generated value &mdash; you will need it in the next step. This token is like a password: anyone who has it can deploy to your server.
       </p>
 
-      <h2>Step 3: Configura il file .env</h2>
+      <h2>Step 3: Configure the .env file</h2>
       <p>
         {replaceDomain(
-          "Crea il file di configurazione con tutti i parametri necessari:"
+          "Create the configuration file with all the required parameters:"
         )}
       </p>
       <pre><code>{replaceDomain(`cat > /opt/webhook/.env << EOF
-# Token per autenticare le richieste di deploy
-DEPLOY_TOKEN=IL_TOKEN_GENERATO_SOPRA
+# Token to authenticate deploy requests
+DEPLOY_TOKEN=YOUR_TOKEN_GENERATED_ABOVE
 
-# Dominio principale
-DOMAIN=tuodominio.dev
+# Main domain
+DOMAIN=yourdomain.dev
 
-# Configurazione Gitea
-GITEA_URL=https://git.tuodominio.dev
-GITEA_API_TOKEN=IL_TOKEN_API_GITEA
+# Gitea configuration
+GITEA_URL=https://git.yourdomain.dev
+GITEA_API_TOKEN=YOUR_GITEA_API_TOKEN
 
-# Percorsi di lavoro
+# Working paths
 PROJECTS_DIR=/var/www/projects
 DOCKER_PROJECTS_DIR=/opt/docker-projects
 CADDY_PROJECTS_DIR=/etc/caddy/projects.d
 
-# Porta del server webhook
+# Webhook server port
 PORT=4000
 
-# Ambiente
+# Environment
 NODE_ENV=production
 EOF`)}</code></pre>
       <p>
-        Sostituisci i seguenti valori:
+        Replace the following values:
       </p>
       <ul>
-        <li><code>DEPLOY_TOKEN</code> &mdash; il token generato con <code>openssl rand -hex 32</code></li>
-        <li><code>GITEA_API_TOKEN</code> &mdash; il token creato nello step Gitea (Settings → Applications)</li>
+        <li><code>DEPLOY_TOKEN</code> &mdash; the token generated with <code>openssl rand -hex 32</code></li>
+        <li><code>GITEA_API_TOKEN</code> &mdash; the token created in the Gitea step (Settings → Applications)</li>
       </ul>
       <pre><code>chmod 600 /opt/webhook/.env</code></pre>
       <p>
-        Il file ha permessi 600 per proteggere i token.
+        The file has 600 permissions to protect the tokens.
       </p>
 
-      <h2>Step 4: Genera la chiave SSH per il deploy</h2>
+      <h2>Step 4: Generate the SSH key for deploy</h2>
       <p>
-        Il server webhook ha bisogno di una chiave SSH per clonare i repository da Gitea. Genera una coppia di chiavi per l&apos;utente deploy:
+        The webhook server needs an SSH key to clone repositories from Gitea. Generate a key pair for the deploy user:
       </p>
       <pre><code>{`su - deploy -c 'ssh-keygen -t ed25519 -C "prolato-deploy-bot" -f /home/deploy/.ssh/id_ed25519 -N ""'`}</code></pre>
       <p>
-        Questo crea:
+        This creates:
       </p>
       <ul>
-        <li><code>/home/deploy/.ssh/id_ed25519</code> &mdash; chiave privata (resta sul server)</li>
-        <li><code>/home/deploy/.ssh/id_ed25519.pub</code> &mdash; chiave pubblica (da aggiungere a Gitea)</li>
+        <li><code>/home/deploy/.ssh/id_ed25519</code> &mdash; private key (stays on the server)</li>
+        <li><code>/home/deploy/.ssh/id_ed25519.pub</code> &mdash; public key (to be added to Gitea)</li>
       </ul>
 
-      <h2>Step 5: Aggiungi la chiave SSH a Gitea</h2>
+      <h2>Step 5: Add the SSH key to Gitea</h2>
       <p>
-        Visualizza la chiave pubblica:
+        Display the public key:
       </p>
       <pre><code>cat /home/deploy/.ssh/id_ed25519.pub</code></pre>
       <p>
-        Copia l&apos;output e aggiungilo a Gitea:
+        Copy the output and add it to Gitea:
       </p>
       <ol>
-        <li>Accedi a Gitea con l&apos;account admin</li>
-        <li>Vai su <strong>Impostazioni</strong> → <strong>Chiavi SSH / GPG</strong></li>
-        <li>Clicca <strong>Aggiungi chiave</strong></li>
-        <li>Incolla la chiave pubblica e assegna un nome (es. <code>prolato-deploy-bot</code>)</li>
-        <li>Clicca <strong>Aggiungi chiave</strong> per salvare</li>
+        <li>Log in to Gitea with the admin account</li>
+        <li>Go to <strong>Settings</strong> → <strong>SSH / GPG Keys</strong></li>
+        <li>Click <strong>Add Key</strong></li>
+        <li>Paste the public key and assign a name (e.g. <code>prolato-deploy-bot</code>)</li>
+        <li>Click <strong>Add Key</strong> to save</li>
       </ol>
 
       <p>
         {replaceDomain(
-          "Configura anche il known_hosts per evitare prompt SSH interattivi:"
+          "Also configure known_hosts to avoid interactive SSH prompts:"
         )}
       </p>
-      <pre><code>{replaceDomain(`su - deploy -c 'ssh-keyscan -p 2222 git.tuodominio.dev >> /home/deploy/.ssh/known_hosts'`)}</code></pre>
+      <pre><code>{replaceDomain(`su - deploy -c 'ssh-keyscan -p 2222 git.yourdomain.dev >> /home/deploy/.ssh/known_hosts'`)}</code></pre>
 
       <blockquote>
         <p>
           {replaceDomain(
-            "Dopo questo step dovresti poter eseguire su - deploy -c \"ssh -p 2222 git@git.tuodominio.dev\" e vedere un messaggio di benvenuto da Gitea (senza errori di host sconosciuto)."
+            "After this step you should be able to run su - deploy -c \"ssh -p 2222 git@git.yourdomain.dev\" and see a welcome message from Gitea (without unknown host errors)."
           )}
         </p>
       </blockquote>
 
-      <h2>Step 6: Crea il servizio systemd</h2>
+      <h2>Step 6: Create the systemd service</h2>
       <pre><code>{`cat > /etc/systemd/system/webhook.service << 'EOF'
 [Unit]
 Description=Prolato Webhook Server
@@ -148,12 +148,12 @@ EnvironmentFile=/opt/webhook/.env
 WantedBy=multi-user.target
 EOF`}</code></pre>
       <p>
-        La direttiva <code>After</code> assicura che il webhook parta dopo Gitea e Docker. <code>Requires=docker.service</code> garantisce che Docker sia attivo.
+        The <code>After</code> directive ensures the webhook starts after Gitea and Docker. <code>Requires=docker.service</code> guarantees that Docker is active.
       </p>
 
-      <h2>Step 7: Configura logrotate</h2>
+      <h2>Step 7: Configure logrotate</h2>
       <p>
-        Crea una configurazione logrotate per evitare che i log del webhook crescano indefinitamente:
+        Create a logrotate configuration to prevent webhook logs from growing indefinitely:
       </p>
       <pre><code>{`cat > /etc/logrotate.d/webhook << 'EOF'
 /var/log/webhook/*.log {
@@ -174,64 +174,64 @@ EOF
 mkdir -p /var/log/webhook
 chown deploy:deploy /var/log/webhook`}</code></pre>
       <p>
-        Questa configurazione mantiene i log degli ultimi 14 giorni, compressi, e ruota il file ogni giorno.
+        This configuration keeps logs from the last 14 days, compressed, and rotates the file daily.
       </p>
 
-      <h2>Step 8: Avvia il webhook</h2>
+      <h2>Step 8: Start the webhook</h2>
       <pre><code>{`systemctl daemon-reload
 systemctl enable --now webhook`}</code></pre>
 
-      <h2>Step 9: Verifica</h2>
-      <p>Controlla che il webhook sia in esecuzione e risponda:</p>
+      <h2>Step 9: Verify</h2>
+      <p>Check that the webhook is running and responding:</p>
       <pre><code>{replaceDomain(`systemctl status webhook
-curl -s https://webhook.tuodominio.dev/health`)}</code></pre>
+curl -s https://webhook.yourdomain.dev/health`)}</code></pre>
       <p>
-        Il comando <code>systemctl status</code> deve mostrare <code>active (running)</code>. Il comando <code>curl</code> deve restituire una risposta JSON indicando che il servizio e' attivo.
+        The <code>systemctl status</code> command should show <code>active (running)</code>. The <code>curl</code> command should return a JSON response indicating that the service is active.
       </p>
 
       <blockquote>
         <p>
           {replaceDomain(
-            "Dopo questo step dovresti vedere il webhook attivo e l'endpoint https://webhook.tuodominio.dev/health che risponde correttamente."
+            "After this step you should see the webhook active and the endpoint https://webhook.yourdomain.dev/health responding correctly."
           )}
         </p>
       </blockquote>
 
       <h2>Troubleshooting</h2>
-      <h3>Il webhook non si avvia</h3>
+      <h3>The webhook does not start</h3>
       <p>
-        Controlla i log con <code>journalctl -u webhook -n 50</code>. Gli errori piu' comuni:
+        Check the logs with <code>journalctl -u webhook -n 50</code>. The most common errors:
       </p>
       <ul>
-        <li><strong>File .env mancante o incompleto</strong> &mdash; verifica che <code>/opt/webhook/.env</code> esista e contenga tutti i parametri</li>
-        <li><strong>Dipendenze npm mancanti</strong> &mdash; esegui <code>cd /opt/webhook/webhook &amp;&amp; npm install --production</code></li>
-        <li><strong>Porta 4000 occupata</strong> &mdash; controlla con <code>ss -tlnp | grep 4000</code></li>
+        <li><strong>Missing or incomplete .env file</strong> &mdash; verify that <code>/opt/webhook/.env</code> exists and contains all parameters</li>
+        <li><strong>Missing npm dependencies</strong> &mdash; run <code>cd /opt/webhook/webhook &amp;&amp; npm install --production</code></li>
+        <li><strong>Port 4000 in use</strong> &mdash; check with <code>ss -tlnp | grep 4000</code></li>
       </ul>
 
-      <h3>L&apos;endpoint /health non risponde</h3>
+      <h3>The /health endpoint does not respond</h3>
       <p>
         {replaceDomain(
-          "Verifica che Caddy stia facendo proxy verso il webhook: controlla il blocco webhook.tuodominio.dev nel Caddyfile. Puoi anche testare direttamente sulla porta locale:"
+          "Verify that Caddy is proxying to the webhook: check the webhook.yourdomain.dev block in the Caddyfile. You can also test directly on the local port:"
         )}
       </p>
       <pre><code>curl -s http://localhost:4000/health</code></pre>
       <p>
-        Se questo funziona ma l&apos;URL HTTPS no, il problema e' nella configurazione di Caddy.
+        If this works but the HTTPS URL does not, the problem is in the Caddy configuration.
       </p>
 
-      <h3>Errore di connessione SSH a Gitea</h3>
+      <h3>SSH connection error to Gitea</h3>
       <p>
-        Se la chiave SSH non funziona, verifica che:
+        If the SSH key is not working, verify that:
       </p>
       <ul>
-        <li>La chiave pubblica sia stata aggiunta correttamente all&apos;account admin di Gitea</li>
-        <li>Il file <code>/home/deploy/.ssh/known_hosts</code> contenga l&apos;host di Gitea</li>
-        <li>I permessi della directory <code>.ssh</code> siano corretti: <code>chmod 700 /home/deploy/.ssh &amp;&amp; chmod 600 /home/deploy/.ssh/id_ed25519</code></li>
+        <li>The public key has been correctly added to the Gitea admin account</li>
+        <li>The file <code>/home/deploy/.ssh/known_hosts</code> contains the Gitea host</li>
+        <li>The <code>.ssh</code> directory permissions are correct: <code>chmod 700 /home/deploy/.ssh &amp;&amp; chmod 600 /home/deploy/.ssh/id_ed25519</code></li>
       </ul>
 
       <hr />
       <p>
-        <Link href="/docs/setup/verify">Prossimo step: Verifica →</Link>
+        <Link href="/docs/setup/verify">Next step: Verify →</Link>
       </p>
     </div>
   );

@@ -8,74 +8,74 @@ export default function DnsPage() {
 
   return (
     <div>
-      <h1>1. DNS e Dominio</h1>
+      <h1>1. DNS & Domain</h1>
       <p>
         {replaceDomain(
-          "In questo step configurerai il dominio tuodominio.dev e i record DNS su Cloudflare, in modo che il traffico venga indirizzato correttamente alla tua VPS."
+          "In this step you will configure the domain yourdomain.dev and the DNS records on Cloudflare, so that traffic is correctly routed to your VPS."
         )}
       </p>
 
-      <h2>Prerequisiti</h2>
+      <h2>Prerequisites</h2>
       <ul>
-        <li>Un dominio registrato (puoi acquistarne uno da qualsiasi registrar)</li>
-        <li>L&apos;indirizzo IP della tua VPS</li>
+        <li>A registered domain (you can purchase one from any registrar)</li>
+        <li>The IP address of your VPS</li>
       </ul>
 
-      <h2>Step 1: Registra un account Cloudflare</h2>
+      <h2>Step 1: Register a Cloudflare account</h2>
       <p>
-        Se non hai ancora un account Cloudflare, registrati gratuitamente su{" "}
+        If you don&apos;t have a Cloudflare account yet, sign up for free at{" "}
         <a href="https://dash.cloudflare.com/sign-up" target="_blank" rel="noopener noreferrer">
           dash.cloudflare.com/sign-up
         </a>
-        . Il piano gratuito e' sufficiente per Prolato.
+        . The free plan is sufficient for Prolato.
       </p>
 
-      <h2>Step 2: Aggiungi il dominio a Cloudflare</h2>
+      <h2>Step 2: Add the domain to Cloudflare</h2>
       <p>
         {replaceDomain(
-          "Dalla dashboard Cloudflare, clicca \"Add a site\" e inserisci tuodominio.dev. Seleziona il piano Free e prosegui."
+          "From the Cloudflare dashboard, click \"Add a site\" and enter yourdomain.dev. Select the Free plan and continue."
         )}
       </p>
       <p>
-        Cloudflare ti mostrera' i nameserver da configurare. Prendi nota dei due nameserver assegnati (ad esempio <code>ada.ns.cloudflare.com</code> e <code>bill.ns.cloudflare.com</code>).
+        Cloudflare will show you the nameservers to configure. Take note of the two assigned nameservers (for example <code>ada.ns.cloudflare.com</code> and <code>bill.ns.cloudflare.com</code>).
       </p>
 
-      <h2>Step 3: Aggiorna i nameserver sul registrar</h2>
+      <h2>Step 3: Update the nameservers on the registrar</h2>
       <p>
-        Vai nel pannello del tuo registrar (dove hai acquistato il dominio) e sostituisci i nameserver esistenti con quelli forniti da Cloudflare. La propagazione puo' richiedere fino a 24 ore, ma di solito avviene in pochi minuti.
+        Go to your registrar&apos;s panel (where you purchased the domain) and replace the existing nameservers with those provided by Cloudflare. Propagation can take up to 24 hours, but usually happens within a few minutes.
       </p>
       <blockquote>
         <p>
-          Dopo questo step dovresti ricevere un&apos;email da Cloudflare che conferma che il dominio e' attivo.
+          After this step you should receive an email from Cloudflare confirming that the domain is active.
         </p>
       </blockquote>
 
-      <h2>Step 4: Crea i record DNS</h2>
+      <h2>Step 4: Create the DNS records</h2>
       <p>
         {replaceDomain(
-          "Nella sezione DNS di Cloudflare, crea i seguenti record A puntando all'IP della tua VPS (sostituisci 203.0.113.1 con il tuo IP reale):"
+          "In the Cloudflare DNS section, create the following A records pointing to your VPS IP (replace 203.0.113.1 with your actual IP):"
         )}
       </p>
 
       <table>
         <thead>
           <tr>
-            <th>Tipo</th>
-            <th>Nome</th>
-            <th>Contenuto</th>
+            <th>Type</th>
+            <th>Name</th>
+            <th>Content</th>
             <th>Proxy</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>A</td>
-            <td>{replaceDomain("tuodominio.dev")}</td>
+            <td>{replaceDomain("yourdomain.dev")}</td>
             <td>203.0.113.1</td>
             <td>DNS only</td>
           </tr>
           <tr>
             <td>A</td>
-            <td>{replaceDomain("*.tuodominio.dev")}</td>
+            <td>{replaceDomain("*.yourdomain.dev")}</td>
             <td>203.0.113.1</td>
             <td>DNS only</td>
           </tr>
@@ -83,89 +83,89 @@ export default function DnsPage() {
       </table>
 
       <p>
-        <strong>Importante:</strong> imposta il proxy su <strong>DNS only</strong> (icona grigia, non arancione). Caddy gestira' direttamente HTTPS e non serve il proxy Cloudflare.
+        <strong>Important:</strong> set the proxy to <strong>DNS only</strong> (grey icon, not orange). Caddy will handle HTTPS directly and the Cloudflare proxy is not needed.
       </p>
 
       <p>
         {replaceDomain(
-          "Il record wildcard (*.tuodominio.dev) permette di creare automaticamente sottodomini per ogni progetto che deployi, senza dover aggiungere record DNS manualmente."
+          "The wildcard record (*.yourdomain.dev) allows automatically creating subdomains for every project you deploy, without having to add DNS records manually."
         )}
       </p>
 
       <blockquote>
         <p>
           {replaceDomain(
-            "Dopo questo step dovresti vedere i record A nella dashboard DNS di Cloudflare per tuodominio.dev e *.tuodominio.dev."
+            "After this step you should see the A records in the Cloudflare DNS dashboard for yourdomain.dev and *.yourdomain.dev."
           )}
         </p>
       </blockquote>
 
-      <h2>Step 5: Crea un API Token Cloudflare</h2>
+      <h2>Step 5: Create a Cloudflare API Token</h2>
       <p>
-        Caddy ha bisogno di un token API per generare certificati SSL tramite DNS challenge. Ecco come crearlo:
+        Caddy needs an API token to generate SSL certificates via DNS challenge. Here&apos;s how to create it:
       </p>
       <ol>
-        <li>Vai su <a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank" rel="noopener noreferrer">Cloudflare → Profile → API Tokens</a></li>
-        <li>Clicca <strong>Create Token</strong></li>
-        <li>Seleziona il template <strong>Edit zone DNS</strong></li>
-        <li>Nella sezione <strong>Permissions</strong>, verifica che ci sia: <code>Zone &gt; DNS &gt; Edit</code></li>
-        <li>{replaceDomain("Nella sezione Zone Resources, seleziona: Include > Specific zone > tuodominio.dev")}</li>
-        <li>Clicca <strong>Continue to summary</strong> e poi <strong>Create Token</strong></li>
-        <li>Copia il token generato e salvalo in un posto sicuro &mdash; ti servira' durante la configurazione di Caddy</li>
+        <li>Go to <a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank" rel="noopener noreferrer">Cloudflare → Profile → API Tokens</a></li>
+        <li>Click <strong>Create Token</strong></li>
+        <li>Select the <strong>Edit zone DNS</strong> template</li>
+        <li>In the <strong>Permissions</strong> section, verify that it includes: <code>Zone &gt; DNS &gt; Edit</code></li>
+        <li>{replaceDomain("In the Zone Resources section, select: Include > Specific zone > yourdomain.dev")}</li>
+        <li>Click <strong>Continue to summary</strong> and then <strong>Create Token</strong></li>
+        <li>Copy the generated token and save it in a safe place &mdash; you will need it during the Caddy setup</li>
       </ol>
 
       <blockquote>
         <p>
-          Dopo questo step dovresti avere un token API Cloudflare che inizia con una stringa alfanumerica. Puoi verificarlo con:
+          After this step you should have a Cloudflare API token that starts with an alphanumeric string. You can verify it with:
         </p>
       </blockquote>
       <pre><code>{replaceDomain(`curl -X GET "https://api.cloudflare.com/client/v4/user/tokens/verify" \\
-  -H "Authorization: Bearer IL_TUO_TOKEN" \\
+  -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json"`)}</code></pre>
       <p>
-        Dovresti ricevere una risposta con <code>&quot;status&quot;: &quot;active&quot;</code>.
+        You should receive a response with <code>&quot;status&quot;: &quot;active&quot;</code>.
       </p>
 
-      <h2>Step 6: Verifica la propagazione DNS</h2>
+      <h2>Step 6: Verify DNS propagation</h2>
       <p>
         {replaceDomain(
-          "Verifica che i record DNS siano propagati correttamente usando il comando dig:"
+          "Verify that the DNS records have propagated correctly using the dig command:"
         )}
       </p>
-      <pre><code>{replaceDomain(`dig +short tuodominio.dev
-dig +short git.tuodominio.dev
-dig +short webhook.tuodominio.dev`)}</code></pre>
+      <pre><code>{replaceDomain(`dig +short yourdomain.dev
+dig +short git.yourdomain.dev
+dig +short webhook.yourdomain.dev`)}</code></pre>
       <p>
-        Tutti e tre i comandi devono restituire l&apos;IP della tua VPS. Se non vedi risultati, attendi qualche minuto e riprova.
+        All three commands should return your VPS IP. If you don&apos;t see results, wait a few minutes and try again.
       </p>
 
       <blockquote>
         <p>
-          Dopo questo step dovresti vedere l&apos;IP della tua VPS come risposta a tutti i comandi <code>dig</code>.
+          After this step you should see your VPS IP as the response to all <code>dig</code> commands.
         </p>
       </blockquote>
 
       <h2>Troubleshooting</h2>
-      <h3>Il comando dig non restituisce risultati</h3>
+      <h3>The dig command returns no results</h3>
       <p>
-        La propagazione DNS puo' richiedere fino a 24 ore. Se dopo 30 minuti non vedi risultati, verifica di aver salvato i record nella dashboard Cloudflare e che i nameserver siano stati aggiornati sul registrar.
+        DNS propagation can take up to 24 hours. If after 30 minutes you don&apos;t see results, verify that you saved the records in the Cloudflare dashboard and that the nameservers were updated on the registrar.
       </p>
 
-      <h3>dig restituisce un IP diverso</h3>
+      <h3>dig returns a different IP</h3>
       <p>
-        Verifica che il proxy Cloudflare sia disattivato (icona grigia &quot;DNS only&quot;). Se e' attivo (icona arancione), <code>dig</code> restituira' gli IP di Cloudflare anziche' quello della tua VPS.
+        Verify that the Cloudflare proxy is disabled (grey &quot;DNS only&quot; icon). If it&apos;s active (orange icon), <code>dig</code> will return Cloudflare&apos;s IPs instead of your VPS IP.
       </p>
 
-      <h3>Il token API non funziona</h3>
+      <h3>The API token doesn&apos;t work</h3>
       <p>
         {replaceDomain(
-          "Verifica che il token abbia i permessi corretti (Zone > DNS > Edit) e che sia stato configurato per la zona corretta (tuodominio.dev)."
+          "Verify that the token has the correct permissions (Zone > DNS > Edit) and that it was configured for the correct zone (yourdomain.dev)."
         )}
       </p>
 
       <hr />
       <p>
-        <Link href="/docs/setup/vps">Prossimo step: Server VPS →</Link>
+        <Link href="/docs/setup/vps">Next step: VPS Server →</Link>
       </p>
     </div>
   );

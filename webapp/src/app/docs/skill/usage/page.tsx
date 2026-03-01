@@ -8,148 +8,148 @@ export default function SkillUsagePage() {
 
   return (
     <div>
-      <h1>Utilizzo della Skill</h1>
+      <h1>Skill Usage</h1>
       <p>
         {replaceDomain(
-          "La skill Prolato ti permette di gestire i tuoi progetti su tuodominio.dev direttamente da Claude Code. Ecco tutti i comandi disponibili."
+          "The Prolato skill lets you manage your projects on yourdomain.dev directly from Claude Code. Here are all the available commands."
         )}
       </p>
 
-      <h2>Deploy di un progetto</h2>
+      <h2>Deploy a project</h2>
       <p>
-        Per deployare un nuovo progetto, naviga nella cartella del progetto e chiedi a Claude:
+        To deploy a new project, navigate to the project folder and ask Claude:
       </p>
-      <pre><code>{`"deploya questo progetto"`}</code></pre>
+      <pre><code>{`"deploy this project"`}</code></pre>
       <p>
-        Oppure invoca il comando diretto:
+        Or invoke the direct command:
       </p>
       <pre><code>/prolato deploy</code></pre>
 
-      <h3>Cosa succede dietro le quinte</h3>
+      <h3>What happens behind the scenes</h3>
       <ol>
-        <li>Claude analizza il progetto per determinare il tipo (statico, Node.js, Docker, ecc.)</li>
-        <li>Ti chiede un nome per il progetto (che diventa il sottodominio)</li>
-        <li>Crea un repository su Gitea e pusha il codice</li>
-        <li>Invia una richiesta al webhook per avviare il deploy</li>
-        <li>Il webhook esegue la build e configura Caddy</li>
+        <li>Claude analyzes the project to determine the type (static, Node.js, Docker, etc.)</li>
+        <li>It asks you for a project name (which becomes the subdomain)</li>
+        <li>It creates a repository on Gitea and pushes the code</li>
+        <li>It sends a request to the webhook to start the deploy</li>
+        <li>The webhook runs the build and configures Caddy</li>
       </ol>
 
-      <h3>Risultato atteso</h3>
+      <h3>Expected result</h3>
       <p>
         {replaceDomain(
-          "Al termine del deploy, Claude ti mostra l'URL del progetto (es. https://nome-progetto.tuodominio.dev) e conferma che il sito e' online."
+          "At the end of the deploy, Claude shows you the project URL (e.g. https://project-name.yourdomain.dev) and confirms that the site is online."
         )}
       </p>
 
-      <h2>Lista progetti</h2>
-      <p>Per vedere tutti i progetti deployati, chiedi a Claude:</p>
-      <pre><code>{`"lista i miei progetti"`}</code></pre>
+      <h2>List projects</h2>
+      <p>To see all deployed projects, ask Claude:</p>
+      <pre><code>{`"list my projects"`}</code></pre>
 
-      <h3>Cosa succede dietro le quinte</h3>
+      <h3>What happens behind the scenes</h3>
       <p>
-        Claude interroga il webhook per ottenere l&apos;elenco dei progetti registrati con i relativi URL e stato.
+        Claude queries the webhook to get the list of registered projects with their URLs and status.
       </p>
 
-      <h3>Risultato atteso</h3>
+      <h3>Expected result</h3>
       <p>
         {replaceDomain(
-          "Una lista di tutti i progetti con nome, URL (es. https://nome.tuodominio.dev), tipo di deploy e stato (running/stopped)."
+          "A list of all projects with name, URL (e.g. https://name.yourdomain.dev), deploy type, and status (running/stopped)."
         )}
       </p>
 
-      <h2>Aggiorna un progetto</h2>
-      <p>Per ri-deployare un progetto con il codice aggiornato:</p>
-      <pre><code>{`"aggiorna progetto nome-progetto"`}</code></pre>
+      <h2>Update a project</h2>
+      <p>To re-deploy a project with updated code:</p>
+      <pre><code>{`"update project project-name"`}</code></pre>
 
-      <h3>Cosa succede dietro le quinte</h3>
+      <h3>What happens behind the scenes</h3>
       <p>
-        Claude pusha le modifiche al repository Gitea e invia una nuova richiesta di deploy al webhook. Il webhook esegue una nuova build con il codice aggiornato.
+        Claude pushes the changes to the Gitea repository and sends a new deploy request to the webhook. The webhook runs a new build with the updated code.
       </p>
 
-      <h3>Risultato atteso</h3>
+      <h3>Expected result</h3>
       <p>
-        Il progetto viene aggiornato con il codice piu' recente. Claude conferma il completamento del deploy e verifica che il sito risponda correttamente.
+        The project is updated with the latest code. Claude confirms the deploy completion and verifies that the site responds correctly.
       </p>
 
-      <h2>Elimina un progetto</h2>
-      <p>Per eliminare un progetto deployato:</p>
-      <pre><code>{`"elimina progetto nome-progetto"`}</code></pre>
+      <h2>Delete a project</h2>
+      <p>To delete a deployed project:</p>
+      <pre><code>{`"delete project project-name"`}</code></pre>
 
-      <h3>Cosa succede dietro le quinte</h3>
+      <h3>What happens behind the scenes</h3>
       <p>
-        Claude chiede conferma prima di procedere. Dopo la conferma, rimuove il container Docker (se presente), la configurazione Caddy e il repository Gitea.
+        Claude asks for confirmation before proceeding. After confirmation, it removes the Docker container (if present), the Caddy configuration, and the Gitea repository.
       </p>
 
-      <h3>Risultato atteso</h3>
+      <h3>Expected result</h3>
       <p>
         {replaceDomain(
-          "Il progetto viene rimosso completamente. L'URL (es. https://nome.tuodominio.dev) non sara' piu' raggiungibile."
+          "The project is completely removed. The URL (e.g. https://name.yourdomain.dev) will no longer be reachable."
         )}
       </p>
 
       <blockquote>
         <p>
-          <strong>Attenzione:</strong> L&apos;eliminazione di un progetto Docker rimuove anche i volumi associati. Se il progetto ha un database, <strong>tutti i dati verranno persi</strong>. Esegui un backup prima di eliminare un progetto con database.
+          <strong>Warning:</strong> Deleting a Docker project also removes the associated volumes. If the project has a database, <strong>all data will be lost</strong>. Perform a backup before deleting a project with a database.
         </p>
       </blockquote>
 
       <h2>Rollback</h2>
-      <p>Per tornare alla versione precedente di un progetto:</p>
-      <pre><code>{`"rollback progetto nome-progetto"`}</code></pre>
+      <p>To revert to the previous version of a project:</p>
+      <pre><code>{`"rollback project project-name"`}</code></pre>
 
-      <h3>Cosa succede dietro le quinte</h3>
+      <h3>What happens behind the scenes</h3>
       <p>
-        Claude ripristina la versione precedente del progetto. Il webhook esegue un nuovo deploy utilizzando il codice della versione salvata.
+        Claude restores the previous version of the project. The webhook runs a new deploy using the code from the saved version.
       </p>
 
-      <h3>Risultato atteso</h3>
+      <h3>Expected result</h3>
       <p>
-        Il progetto torna alla versione precedente al deploy piu' recente.
+        The project reverts to the version before the most recent deploy.
       </p>
 
       <blockquote>
         <p>
-          <strong>Nota:</strong> E&apos; disponibile un solo livello di rollback. Il rollback ripristina la versione immediatamente precedente all&apos;ultimo deploy.
+          <strong>Note:</strong> Only one level of rollback is available. The rollback restores the version immediately before the last deploy.
         </p>
       </blockquote>
 
       <h2>Logs</h2>
-      <p>Per visualizzare i log di un progetto Docker:</p>
-      <pre><code>{`"mostra i log di nome-progetto"`}</code></pre>
+      <p>To view the logs of a Docker project:</p>
+      <pre><code>{`"show logs for project-name"`}</code></pre>
 
-      <h3>Cosa succede dietro le quinte</h3>
+      <h3>What happens behind the scenes</h3>
       <p>
-        Claude recupera i log dal container Docker del progetto tramite il webhook.
+        Claude retrieves the logs from the project&apos;s Docker container via the webhook.
       </p>
 
-      <h3>Risultato atteso</h3>
+      <h3>Expected result</h3>
       <p>
-        Gli ultimi log del container Docker vengono mostrati direttamente nella chat. Utile per il debug e il monitoraggio.
+        The latest Docker container logs are displayed directly in the chat. Useful for debugging and monitoring.
       </p>
 
       <blockquote>
         <p>
-          <strong>Nota:</strong> Questo comando funziona solo per i progetti Docker. I progetti statici non hanno log container.
+          <strong>Note:</strong> This command only works for Docker projects. Static projects do not have container logs.
         </p>
       </blockquote>
 
-      <h2>Stato di un progetto</h2>
-      <p>Per controllare lo stato di un progetto:</p>
-      <pre><code>{`"stato di nome-progetto"`}</code></pre>
+      <h2>Project status</h2>
+      <p>To check the status of a project:</p>
+      <pre><code>{`"status of project-name"`}</code></pre>
 
-      <h3>Cosa succede dietro le quinte</h3>
+      <h3>What happens behind the scenes</h3>
       <p>
-        Claude interroga il webhook per ottenere lo stato corrente del progetto, incluso lo stato del container Docker (se applicabile).
+        Claude queries the webhook to get the current status of the project, including the Docker container status (if applicable).
       </p>
 
-      <h3>Risultato atteso</h3>
+      <h3>Expected result</h3>
       <p>
-        Claude mostra se il progetto e' in esecuzione, il tipo di deploy, l&apos;URL e altre informazioni utili come l&apos;uptime.
+        Claude shows whether the project is running, the deploy type, the URL, and other useful information such as uptime.
       </p>
 
       <hr />
       <p>
-        <Link href="/docs/maintenance/backup">Prossimo step: Backup Database &rarr;</Link>
+        <Link href="/docs/maintenance/backup">Next step: Database Backup &rarr;</Link>
       </p>
     </div>
   );

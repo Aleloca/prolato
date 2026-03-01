@@ -11,10 +11,10 @@ BACKUP_BASE="/opt/backups"
 DATE=$(date +%Y-%m-%d_%H-%M)
 RETENTION_DAYS=7
 
-# Crea la directory base se non esiste
+# Create the base directory if it doesn't exist
 mkdir -p "$BACKUP_BASE"
 
-# Loop sui progetti Docker
+# Loop over Docker projects
 for PROJECT_DIR in /opt/docker-projects/*/; do
   PROJECT=$(basename "$PROJECT_DIR")
   BACKUP_DIR="$BACKUP_BASE/$PROJECT"
@@ -28,7 +28,7 @@ for PROJECT_DIR in /opt/docker-projects/*/; do
     docker exec "$PG_CONTAINER" pg_dump -U app app \\
       | gzip > "$BACKUP_DIR/\${DATE}.sql.gz" \\
       && echo "[backup] OK: $BACKUP_DIR/\${DATE}.sql.gz" \\
-      || echo "[backup] ERRORE: backup PostgreSQL fallito per $PROJECT"
+      || echo "[backup] ERROR: PostgreSQL backup failed for $PROJECT"
   fi
 
   # MySQL / MariaDB
@@ -40,7 +40,7 @@ for PROJECT_DIR in /opt/docker-projects/*/; do
     docker exec "$MYSQL_CONTAINER" mysqldump -u app -papp app \\
       | gzip > "$BACKUP_DIR/\${DATE}.sql.gz" \\
       && echo "[backup] OK: $BACKUP_DIR/\${DATE}.sql.gz" \\
-      || echo "[backup] ERRORE: backup MySQL fallito per $PROJECT"
+      || echo "[backup] ERROR: MySQL backup failed for $PROJECT"
   fi
 
   # MongoDB
@@ -52,16 +52,16 @@ for PROJECT_DIR in /opt/docker-projects/*/; do
       --archive --gzip --db app \\
       > "$BACKUP_DIR/\${DATE}.archive.gz" \\
       && echo "[backup] OK: $BACKUP_DIR/\${DATE}.archive.gz" \\
-      || echo "[backup] ERRORE: backup MongoDB fallito per $PROJECT"
+      || echo "[backup] ERROR: MongoDB backup failed for $PROJECT"
   fi
 done
 
-# Pulizia backup vecchi
-echo "[backup] Pulizia backup piu' vecchi di $RETENTION_DAYS giorni..."
+# Clean up old backups
+echo "[backup] Cleaning up backups older than $RETENTION_DAYS days..."
 find "$BACKUP_BASE" -type f -mtime +$RETENTION_DAYS -delete
 find "$BACKUP_BASE" -type d -empty -delete
 
-echo "[backup] Completato."
+echo "[backup] Completed."
 SCRIPT
 
 chmod +x /opt/scripts/backup.sh`;
@@ -71,108 +71,108 @@ export default function BackupPage() {
 
   return (
     <div>
-      <h1>Backup Database</h1>
+      <h1>Database Backup</h1>
       <p>
-        I backup sono fondamentali per proteggere i dati dei tuoi progetti. Questa guida spiega come configurare backup automatici per i database dei progetti Docker deployati con Prolato.
+        Backups are essential to protect your project data. This guide explains how to configure automatic backups for the databases of Docker projects deployed with Prolato.
       </p>
 
-      <h2>Introduzione</h2>
+      <h2>Introduction</h2>
       <p>
-        I progetti Docker che includono un database (PostgreSQL, MySQL, MongoDB) contengono dati che non sono presenti nel repository Git. Se un container viene eliminato o corrotto, i dati del database vanno persi a meno che non esista un backup.
+        Docker projects that include a database (PostgreSQL, MySQL, MongoDB) contain data that is not present in the Git repository. If a container is deleted or corrupted, the database data is lost unless a backup exists.
       </p>
       <p>
-        Lo script di backup che configurerai:
+        The backup script you will configure:
       </p>
       <ul>
-        <li>Analizza tutti i progetti Docker deployati</li>
-        <li>Identifica i container con database</li>
-        <li>Esegue il dump dei dati in file compressi</li>
-        <li>Mantiene i backup degli ultimi 7 giorni</li>
+        <li>Scans all deployed Docker projects</li>
+        <li>Identifies containers with databases</li>
+        <li>Dumps the data into compressed files</li>
+        <li>Keeps backups from the last 7 days</li>
       </ul>
 
-      <h2>Script di backup</h2>
+      <h2>Backup script</h2>
       <p>
-        Crea lo script di backup sul VPS:
+        Create the backup script on the VPS:
       </p>
       <pre><code>{BACKUP_SCRIPT}</code></pre>
 
       <blockquote>
         <p>
-          Lo script usa <code>app</code> come nome utente e database di default. Se i tuoi progetti usano credenziali diverse, modifica lo script di conseguenza.
+          The script uses <code>app</code> as the default username and database name. If your projects use different credentials, modify the script accordingly.
         </p>
       </blockquote>
 
       <h2>Cron job</h2>
       <p>
-        Configura un cron job per eseguire il backup automaticamente ogni giorno alle 3:00 di notte:
+        Configure a cron job to run the backup automatically every day at 3:00 AM:
       </p>
       <pre><code>{`crontab -e
 
-# Aggiungi questa riga:
+# Add this line:
 0 3 * * * /opt/scripts/backup.sh >> /var/log/backup.log 2>&1`}</code></pre>
       <p>
-        I log del backup vengono salvati in <code>/var/log/backup.log</code> per poter verificare eventuali errori.
+        Backup logs are saved to <code>/var/log/backup.log</code> so you can check for any errors.
       </p>
 
       <h2>Retention</h2>
       <p>
-        Lo script mantiene automaticamente solo i backup degli ultimi 7 giorni. I file piu&apos; vecchi vengono eliminati ad ogni esecuzione. Le directory vuote vengono rimosse per mantenere ordine.
+        The script automatically keeps only the backups from the last 7 days. Older files are deleted on each run. Empty directories are removed to keep things tidy.
       </p>
       <p>
-        Per modificare il periodo di retention, cambia il valore della variabile <code>RETENTION_DAYS</code> nello script.
+        To change the retention period, modify the <code>RETENTION_DAYS</code> variable value in the script.
       </p>
 
-      <h2>Ripristino</h2>
+      <h2>Restore</h2>
       <p>
-        Per ripristinare un backup, usa i comandi specifici per ogni tipo di database.
+        To restore a backup, use the specific commands for each database type.
       </p>
 
       <h3>PostgreSQL</h3>
-      <pre><code>{`gunzip < /opt/backups/PROGETTO/DATA.sql.gz \\
-  | docker exec -i CONTAINER_POSTGRES psql -U app app`}</code></pre>
+      <pre><code>{`gunzip < /opt/backups/PROJECT/DATE.sql.gz \\
+  | docker exec -i POSTGRES_CONTAINER psql -U app app`}</code></pre>
 
       <h3>MySQL / MariaDB</h3>
-      <pre><code>{`gunzip < /opt/backups/PROGETTO/DATA.sql.gz \\
-  | docker exec -i CONTAINER_MYSQL mysql -u app -papp app`}</code></pre>
+      <pre><code>{`gunzip < /opt/backups/PROJECT/DATE.sql.gz \\
+  | docker exec -i MYSQL_CONTAINER mysql -u app -papp app`}</code></pre>
 
       <h3>MongoDB</h3>
-      <pre><code>{`docker exec -i CONTAINER_MONGO mongorestore \\
-  --archive --gzip < /opt/backups/PROGETTO/DATA.archive.gz`}</code></pre>
+      <pre><code>{`docker exec -i MONGO_CONTAINER mongorestore \\
+  --archive --gzip < /opt/backups/PROJECT/DATE.archive.gz`}</code></pre>
 
       <p>
-        Sostituisci:
+        Replace:
       </p>
       <ul>
-        <li><code>PROGETTO</code> &mdash; il nome del progetto</li>
-        <li><code>DATA</code> &mdash; la data del backup (es. <code>2024-01-15_03-00</code>)</li>
-        <li><code>CONTAINER_*</code> &mdash; il nome del container Docker (trovalo con <code>docker ps</code>)</li>
+        <li><code>PROJECT</code> &mdash; the project name</li>
+        <li><code>DATE</code> &mdash; the backup date (e.g. <code>2024-01-15_03-00</code>)</li>
+        <li><code>CONTAINER_*</code> &mdash; the Docker container name (find it with <code>docker ps</code>)</li>
       </ul>
 
       <blockquote>
         <p>
-          <strong>Attenzione:</strong> Il ripristino sovrascrive i dati attuali del database. Assicurati di voler procedere prima di eseguire il comando.
+          <strong>Warning:</strong> Restoring overwrites the current database data. Make sure you want to proceed before running the command.
         </p>
       </blockquote>
 
-      <h2>Verifica</h2>
+      <h2>Verification</h2>
       <p>
-        Per verificare che lo script funzioni, eseguilo manualmente:
+        To verify that the script works, run it manually:
       </p>
       <pre><code>{`/opt/scripts/backup.sh
 ls -la /opt/backups/`}</code></pre>
       <p>
-        Dovresti vedere le directory dei progetti con i file di backup compressi.
+        You should see the project directories with compressed backup files.
       </p>
 
       <blockquote>
         <p>
-          Questa configurazione e&apos; opzionale ma fortemente raccomandata per progetti in produzione con dati importanti.
+          This configuration is optional but strongly recommended for production projects with important data.
         </p>
       </blockquote>
 
       <hr />
       <p>
-        <Link href="/docs/maintenance/reboot">Prossimo step: Comportamento al Reboot &rarr;</Link>
+        <Link href="/docs/maintenance/reboot">Next step: Reboot Behavior &rarr;</Link>
       </p>
     </div>
   );

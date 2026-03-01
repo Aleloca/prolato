@@ -10,64 +10,64 @@ export default function DockerPage() {
     <div>
       <h1>5. Docker</h1>
       <p>
-        In questo step installerai Docker per eseguire i container dei progetti, Node.js per il server webhook, e creerai le directory di lavoro necessarie.
+        In this step you will install Docker to run project containers, Node.js for the webhook server, and create the necessary working directories.
       </p>
 
-      <h2>Prerequisiti</h2>
+      <h2>Prerequisites</h2>
       <ul>
-        <li>VPS configurata con utente deploy</li>
-        <li>Caddy e Gitea in esecuzione</li>
+        <li>VPS configured with deploy user</li>
+        <li>Caddy and Gitea running</li>
       </ul>
 
-      <h2>Step 1: Installa Docker</h2>
+      <h2>Step 1: Install Docker</h2>
       <p>
-        Installa Docker usando lo script ufficiale. Questo metodo rileva automaticamente la distribuzione e installa la versione stabile:
+        Install Docker using the official script. This method automatically detects the distribution and installs the stable version:
       </p>
       <pre><code>curl -fsSL https://get.docker.com | bash</code></pre>
       <p>
-        Lo script installa Docker Engine, il CLI e il plugin Docker Compose. Non serve installare Docker Compose separatamente.
+        The script installs Docker Engine, the CLI, and the Docker Compose plugin. There is no need to install Docker Compose separately.
       </p>
 
       <blockquote>
         <p>
-          Dopo questo step dovresti poter eseguire <code>docker --version</code> e vedere la versione installata.
+          After this step you should be able to run <code>docker --version</code> and see the installed version.
         </p>
       </blockquote>
 
-      <h2>Step 2: Aggiungi l&apos;utente deploy al gruppo docker</h2>
+      <h2>Step 2: Add the deploy user to the docker group</h2>
       <p>
-        L&apos;utente deploy deve poter eseguire comandi Docker senza <code>sudo</code>:
+        The deploy user must be able to run Docker commands without <code>sudo</code>:
       </p>
       <pre><code>usermod -aG docker deploy</code></pre>
       <p>
-        Questo aggiunge l&apos;utente deploy al gruppo <code>docker</code>, che ha i permessi per comunicare con il socket Docker.
+        This adds the deploy user to the <code>docker</code> group, which has permissions to communicate with the Docker socket.
       </p>
 
       <blockquote>
         <p>
-          Dopo questo step dovresti poter eseguire <code>su - deploy -c &quot;docker ps&quot;</code> senza errori di permessi.
+          After this step you should be able to run <code>su - deploy -c &quot;docker ps&quot;</code> without permission errors.
         </p>
       </blockquote>
 
-      <h2>Step 3: Installa Node.js 20</h2>
+      <h2>Step 3: Install Node.js 20</h2>
       <p>
-        Il server webhook e' scritto in Node.js. Installa Node.js 20 LTS tramite NodeSource:
+        The webhook server is written in Node.js. Install Node.js 20 LTS via NodeSource:
       </p>
       <pre><code>{`curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
 apt install -y nodejs`}</code></pre>
       <p>
-        Node.js 20 e' la versione LTS (Long Term Support) con supporto attivo fino ad aprile 2026.
+        Node.js 20 is the LTS (Long Term Support) version with active support until April 2026.
       </p>
 
       <blockquote>
         <p>
-          Dopo questo step dovresti poter eseguire <code>node --version</code> e vedere <code>v20.x.x</code>.
+          After this step you should be able to run <code>node --version</code> and see <code>v20.x.x</code>.
         </p>
       </blockquote>
 
-      <h2>Step 4: Crea le directory di lavoro</h2>
+      <h2>Step 4: Create the working directories</h2>
       <p>
-        Crea le directory che verranno usate dal server webhook e dai container Docker:
+        Create the directories that will be used by the webhook server and Docker containers:
       </p>
       <pre><code>{`mkdir -p /var/www/projects
 mkdir -p /opt/docker-projects
@@ -77,59 +77,59 @@ mkdir -p /opt/webhook
 chown deploy:deploy /var/www/projects
 chown deploy:deploy /opt/docker-projects
 chown deploy:deploy /opt/webhook`}</code></pre>
-      <p>Ecco a cosa serve ogni directory:</p>
+      <p>Here&apos;s what each directory is used for:</p>
       <ul>
-        <li><code>/var/www/projects</code> &mdash; contiene i file sorgente dei progetti (clonati da Gitea)</li>
-        <li><code>/opt/docker-projects</code> &mdash; contiene i Dockerfile e le configurazioni Docker per ogni progetto</li>
-        <li><code>/etc/caddy/projects.d</code> &mdash; contiene i file <code>.caddy</code> con la configurazione reverse proxy per ogni progetto</li>
-        <li><code>/opt/webhook</code> &mdash; contiene il codice del server webhook</li>
+        <li><code>/var/www/projects</code> &mdash; contains the project source files (cloned from Gitea)</li>
+        <li><code>/opt/docker-projects</code> &mdash; contains the Dockerfiles and Docker configurations for each project</li>
+        <li><code>/etc/caddy/projects.d</code> &mdash; contains the <code>.caddy</code> files with the reverse proxy configuration for each project</li>
+        <li><code>/opt/webhook</code> &mdash; contains the webhook server code</li>
       </ul>
 
       <blockquote>
         <p>
-          Dopo questo step tutte le directory dovrebbero esistere con i permessi corretti. Verifica con <code>ls -la /var/www/projects /opt/docker-projects /opt/webhook</code>.
+          After this step all directories should exist with the correct permissions. Verify with <code>ls -la /var/www/projects /opt/docker-projects /opt/webhook</code>.
         </p>
       </blockquote>
 
-      <h2>Step 5: Verifica</h2>
-      <p>Controlla che tutto sia installato correttamente:</p>
+      <h2>Step 5: Verify</h2>
+      <p>Check that everything is installed correctly:</p>
       <pre><code>{`docker --version
 node --version
 npm --version
 su - deploy -c "docker ps"
 ls -la /var/www/projects /opt/docker-projects /opt/webhook`}</code></pre>
       <p>
-        Tutti i comandi devono funzionare senza errori. In particolare, <code>su - deploy -c &quot;docker ps&quot;</code> deve mostrare la lista dei container (vuota, ma senza errori di permessi).
+        All commands should work without errors. In particular, <code>su - deploy -c &quot;docker ps&quot;</code> should show the container list (empty, but without permission errors).
       </p>
 
       <h2>Troubleshooting</h2>
-      <h3>docker ps restituisce &quot;permission denied&quot;</h3>
+      <h3>docker ps returns &quot;permission denied&quot;</h3>
       <p>
-        L&apos;utente deploy potrebbe non essere ancora nel gruppo docker. Dopo aver eseguito <code>usermod -aG docker deploy</code>, e' necessario un nuovo login. Prova con:
+        The deploy user may not yet be in the docker group. After running <code>usermod -aG docker deploy</code>, a new login is required. Try with:
       </p>
-      <pre><code>{`su - deploy -c "groups"  # verifica che 'docker' sia nella lista
-su - deploy -c "docker ps"  # riprova dopo il re-login`}</code></pre>
+      <pre><code>{`su - deploy -c "groups"  # verify that 'docker' is in the list
+su - deploy -c "docker ps"  # retry after re-login`}</code></pre>
       <p>
-        Se il gruppo non appare, prova a riavviare il servizio Docker: <code>systemctl restart docker</code>.
+        If the group doesn&apos;t appear, try restarting the Docker service: <code>systemctl restart docker</code>.
       </p>
 
-      <h3>Node.js non trovato dopo l&apos;installazione</h3>
+      <h3>Node.js not found after installation</h3>
       <p>
-        Se <code>node --version</code> restituisce &quot;command not found&quot;, verifica che il repository NodeSource sia stato aggiunto correttamente:
+        If <code>node --version</code> returns &quot;command not found&quot;, verify that the NodeSource repository was added correctly:
       </p>
       <pre><code>ls /etc/apt/sources.list.d/nodesource.list</code></pre>
       <p>
-        Se il file non esiste, riesegui lo script di setup di NodeSource.
+        If the file doesn&apos;t exist, re-run the NodeSource setup script.
       </p>
 
-      <h3>Docker non si avvia</h3>
+      <h3>Docker won&apos;t start</h3>
       <p>
-        Controlla i log con <code>journalctl -u docker -n 50</code>. L&apos;errore piu' comune su VPS con kernel vecchio e' la mancanza del supporto per <code>overlay2</code>. Verifica che il kernel sia almeno alla versione 4.x.
+        Check the logs with <code>journalctl -u docker -n 50</code>. The most common error on VPS with an old kernel is the lack of <code>overlay2</code> support. Verify that the kernel is at least version 4.x.
       </p>
 
       <hr />
       <p>
-        <Link href="/docs/setup/webhook">Prossimo step: Webhook →</Link>
+        <Link href="/docs/setup/webhook">Next step: Webhook →</Link>
       </p>
     </div>
   );

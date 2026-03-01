@@ -7,33 +7,33 @@ export default function RebootPage() {
 
   return (
     <div>
-      <h1>Comportamento al Reboot</h1>
+      <h1>Reboot Behavior</h1>
       <p>
         {replaceDomain(
-          "Tutti i servizi di Prolato su tuodominio.dev sono configurati per ripartire automaticamente dopo un reboot del server. Questa guida spiega cosa succede e come verificare che tutto funzioni."
+          "All Prolato services on yourdomain.dev are configured to restart automatically after a server reboot. This guide explains what happens and how to verify that everything works."
         )}
       </p>
 
-      <h2>Cosa succede al reboot</h2>
+      <h2>What happens on reboot</h2>
       <p>
-        Quando il VPS viene riavviato (manualmente o per manutenzione del provider), tutti i servizi ripartono automaticamente grazie a due meccanismi:
+        When the VPS is restarted (manually or for provider maintenance), all services restart automatically thanks to two mechanisms:
       </p>
       <ul>
         <li>
-          <strong>systemd</strong> &mdash; i servizi abilitati con <code>systemctl enable</code> vengono avviati automaticamente all&apos;avvio del sistema
+          <strong>systemd</strong> &mdash; services enabled with <code>systemctl enable</code> are started automatically at system boot
         </li>
         <li>
-          <strong>Docker restart policy</strong> &mdash; i container con <code>restart: unless-stopped</code> vengono riavviati dal daemon Docker
+          <strong>Docker restart policy</strong> &mdash; containers with <code>restart: unless-stopped</code> are restarted by the Docker daemon
         </li>
       </ul>
 
-      <h2>Servizi che ripartono automaticamente</h2>
+      <h2>Services that restart automatically</h2>
       <table>
         <thead>
           <tr>
-            <th>Servizio</th>
-            <th>Tipo</th>
-            <th>Meccanismo</th>
+            <th>Service</th>
+            <th>Type</th>
+            <th>Mechanism</th>
           </tr>
         </thead>
         <tbody>
@@ -49,124 +49,124 @@ export default function RebootPage() {
           </tr>
           <tr>
             <td><strong>Webhook</strong></td>
-            <td>Server di deploy</td>
+            <td>Deploy server</td>
             <td>systemd enabled</td>
           </tr>
           <tr>
-            <td><strong>Container Docker</strong></td>
-            <td>Progetti deployati</td>
+            <td><strong>Docker Containers</strong></td>
+            <td>Deployed projects</td>
             <td>restart: unless-stopped</td>
           </tr>
         </tbody>
       </table>
       <p>
-        Non e' necessario alcun intervento manuale: dopo il riavvio del server, tutti i servizi e i siti deployati tornano online automaticamente.
+        No manual intervention is needed: after the server restarts, all services and deployed sites come back online automatically.
       </p>
 
-      <h2>Verifica post-reboot</h2>
+      <h2>Post-reboot verification</h2>
       <p>
-        Dopo un reboot, puoi verificare lo stato di tutti i servizi con questi comandi:
+        After a reboot, you can verify the status of all services with these commands:
       </p>
-      <pre><code>{replaceDomain(`# Verifica servizi systemd
+      <pre><code>{replaceDomain(`# Verify systemd services
 systemctl status caddy
 systemctl status gitea
 systemctl status webhook
 
-# Verifica container Docker
+# Verify Docker containers
 docker ps
 
-# Test rapido degli endpoint
-curl -s https://tuodominio.dev
-curl -s https://git.tuodominio.dev/api/v1/version
-curl -s https://webhook.tuodominio.dev/health`)}</code></pre>
+# Quick endpoint test
+curl -s https://yourdomain.dev
+curl -s https://git.yourdomain.dev/api/v1/version
+curl -s https://webhook.yourdomain.dev/health`)}</code></pre>
       <p>
-        Tutti i servizi devono essere <code>active (running)</code> e tutti i container Docker devono essere in stato <code>Up</code>.
+        All services should be <code>active (running)</code> and all Docker containers should be in <code>Up</code> state.
       </p>
 
-      <h2>Checklist post-reboot</h2>
+      <h2>Post-reboot checklist</h2>
       <p>
-        Usa questa checklist per una verifica completa dopo un riavvio:
+        Use this checklist for a complete verification after a reboot:
       </p>
       <ul>
-        <li>{replaceDomain("Caddy risponde su HTTPS (curl https://tuodominio.dev)")}</li>
-        <li>{replaceDomain("Gitea e' accessibile (curl https://git.tuodominio.dev/api/v1/version)")}</li>
-        <li>{replaceDomain("Webhook health check risponde (curl https://webhook.tuodominio.dev/health)")}</li>
-        <li>Tutti i container Docker sono running (<code>docker ps</code>)</li>
-        <li>I siti deployati sono raggiungibili dal browser</li>
+        <li>{replaceDomain("Caddy responds on HTTPS (curl https://yourdomain.dev)")}</li>
+        <li>{replaceDomain("Gitea is accessible (curl https://git.yourdomain.dev/api/v1/version)")}</li>
+        <li>{replaceDomain("Webhook health check responds (curl https://webhook.yourdomain.dev/health)")}</li>
+        <li>All Docker containers are running (<code>docker ps</code>)</li>
+        <li>Deployed sites are reachable from the browser</li>
       </ul>
 
       <h2>Troubleshooting</h2>
       <p>
-        Se dopo un reboot un servizio non riparte, segui questi passaggi per diagnosticare e risolvere il problema.
+        If after a reboot a service does not restart, follow these steps to diagnose and fix the problem.
       </p>
 
-      <h3>1. Controlla i log del servizio</h3>
+      <h3>1. Check the service logs</h3>
       <p>
-        Usa <code>journalctl</code> per leggere i log e capire la causa dell&apos;errore:
+        Use <code>journalctl</code> to read the logs and understand the cause of the error:
       </p>
-      <pre><code>{`# Log di Caddy
+      <pre><code>{`# Caddy logs
 journalctl -u caddy -n 50 --no-pager
 
-# Log di Gitea
+# Gitea logs
 journalctl -u gitea -n 50 --no-pager
 
-# Log del Webhook
+# Webhook logs
 journalctl -u webhook -n 50 --no-pager`}</code></pre>
 
-      <h3>2. Riavvia il servizio manualmente</h3>
+      <h3>2. Restart the service manually</h3>
       <p>
-        Se un servizio non si e' avviato, prova a riavviarlo manualmente:
+        If a service did not start, try restarting it manually:
       </p>
       <pre><code>{`systemctl restart caddy
 systemctl restart gitea
 systemctl restart webhook`}</code></pre>
       <p>
-        Dopo il riavvio manuale, verifica lo stato con <code>systemctl status</code>.
+        After the manual restart, verify the status with <code>systemctl status</code>.
       </p>
 
-      <h3>3. Verifica che il servizio sia abilitato</h3>
+      <h3>3. Verify that the service is enabled</h3>
       <p>
-        Se un servizio non si avvia automaticamente al boot, potrebbe non essere abilitato:
+        If a service does not start automatically at boot, it may not be enabled:
       </p>
       <pre><code>{`systemctl is-enabled caddy
 systemctl is-enabled gitea
 systemctl is-enabled webhook`}</code></pre>
       <p>
-        Se il risultato e' <code>disabled</code>, abilita il servizio:
+        If the result is <code>disabled</code>, enable the service:
       </p>
       <pre><code>{`systemctl enable caddy
 systemctl enable gitea
 systemctl enable webhook`}</code></pre>
 
-      <h3>4. Controlla i container Docker</h3>
+      <h3>4. Check Docker containers</h3>
       <p>
-        Se i container Docker non sono ripartiti, verifica che il daemon Docker sia attivo e controlla i log dei singoli container:
+        If Docker containers did not restart, verify that the Docker daemon is active and check the logs of individual containers:
       </p>
-      <pre><code>{`# Verifica Docker
+      <pre><code>{`# Verify Docker
 systemctl status docker
 
-# Lista tutti i container (anche quelli fermi)
+# List all containers (including stopped ones)
 docker ps -a
 
-# Log di un container specifico
-cd /opt/docker-projects/nome-progetto
+# Logs for a specific container
+cd /opt/docker-projects/project-name
 docker compose logs`}</code></pre>
       <p>
-        Se il container ha <code>Exited</code> come stato, i log mostreranno la causa dell&apos;errore. Puoi riavviarlo con:
+        If the container has <code>Exited</code> as its status, the logs will show the cause of the error. You can restart it with:
       </p>
-      <pre><code>{`cd /opt/docker-projects/nome-progetto
+      <pre><code>{`cd /opt/docker-projects/project-name
 docker compose up -d`}</code></pre>
 
-      <h3>Problemi comuni</h3>
+      <h3>Common issues</h3>
       <ul>
         <li>
-          <strong>Porta occupata</strong> &mdash; un altro processo occupa la porta. Trova il processo con <code>ss -tlnp | grep PORTA</code>
+          <strong>Port in use</strong> &mdash; another process is occupying the port. Find the process with <code>ss -tlnp | grep PORT</code>
         </li>
         <li>
-          <strong>Disco pieno</strong> &mdash; verifica lo spazio con <code>df -h</code>. Libera spazio con <code>docker system prune</code> se necessario
+          <strong>Disk full</strong> &mdash; check disk space with <code>df -h</code>. Free up space with <code>docker system prune</code> if needed
         </li>
         <li>
-          <strong>Certificati SSL scaduti</strong> &mdash; Caddy rinnova i certificati automaticamente. Se ci sono problemi, riavvia Caddy e attendi 1-2 minuti
+          <strong>Expired SSL certificates</strong> &mdash; Caddy renews certificates automatically. If there are issues, restart Caddy and wait 1-2 minutes
         </li>
       </ul>
     </div>

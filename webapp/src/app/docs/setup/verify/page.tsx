@@ -8,158 +8,158 @@ export default function VerifyPage() {
 
   return (
     <div>
-      <h1>7. Verifica</h1>
+      <h1>7. Verify</h1>
       <p>
         {replaceDomain(
-          "Hai completato l'installazione di tutti i componenti di Prolato su tuodominio.dev. In questo step finale verificherai che tutto funzioni correttamente e raccoglierai le credenziali generate durante il setup."
+          "You have completed the installation of all Prolato components on yourdomain.dev. In this final step you will verify that everything works correctly and collect the credentials generated during setup."
         )}
       </p>
 
-      <h2>Prerequisiti</h2>
+      <h2>Prerequisites</h2>
       <ul>
-        <li>Tutti gli step precedenti completati (DNS, VPS, Caddy, Gitea, Docker, Webhook)</li>
+        <li>All previous steps completed (DNS, VPS, Caddy, Gitea, Docker, Webhook)</li>
       </ul>
 
-      <h2>Checklist di verifica</h2>
+      <h2>Verification checklist</h2>
       <p>
-        Esegui tutti i controlli seguenti. Ogni punto deve funzionare correttamente prima di procedere.
+        Run all the following checks. Each item must work correctly before proceeding.
       </p>
 
-      <h3>1. DNS risolve correttamente</h3>
-      <pre><code>{replaceDomain(`dig +short tuodominio.dev
-dig +short git.tuodominio.dev
-dig +short webhook.tuodominio.dev`)}</code></pre>
+      <h3>1. DNS resolves correctly</h3>
+      <pre><code>{replaceDomain(`dig +short yourdomain.dev
+dig +short git.yourdomain.dev
+dig +short webhook.yourdomain.dev`)}</code></pre>
       <p>
-        Tutti e tre devono restituire l&apos;IP della tua VPS.
+        All three must return the IP of your VPS.
       </p>
 
-      <h3>2. Caddy e' in esecuzione e HTTPS funziona</h3>
+      <h3>2. Caddy is running and HTTPS works</h3>
       <pre><code>{replaceDomain(`systemctl status caddy
-curl -I https://tuodominio.dev`)}</code></pre>
+curl -I https://yourdomain.dev`)}</code></pre>
       <p>
         {replaceDomain(
-          "Lo status deve essere \"active (running)\". curl deve restituire HTTP 200 con un certificato SSL valido per tuodominio.dev."
+          "The status should be \"active (running)\". curl should return HTTP 200 with a valid SSL certificate for yourdomain.dev."
         )}
       </p>
 
-      <h3>3. Gitea e' accessibile via web</h3>
+      <h3>3. Gitea is accessible via web</h3>
       <pre><code>{replaceDomain(`systemctl status gitea
-curl -s https://git.tuodominio.dev/api/v1/version`)}</code></pre>
+curl -s https://git.yourdomain.dev/api/v1/version`)}</code></pre>
       <p>
         {replaceDomain(
-          "Lo status deve essere \"active (running)\". L'API deve restituire la versione di Gitea. Verifica anche di poter accedere a https://git.tuodominio.dev nel browser."
+          "The status should be \"active (running)\". The API should return the Gitea version. Also verify that you can access https://git.yourdomain.dev in the browser."
         )}
       </p>
 
-      <h3>4. Docker e' installato e l&apos;utente deploy puo' usarlo</h3>
+      <h3>4. Docker is installed and the deploy user can use it</h3>
       <pre><code>{`docker --version
 su - deploy -c "docker ps"
 su - deploy -c "docker info --format '{{.ServerVersion}}'"
 `}</code></pre>
       <p>
-        Tutti i comandi devono funzionare senza errori. In particolare, l&apos;utente deploy deve poter eseguire <code>docker ps</code> senza <code>sudo</code>.
+        All commands should work without errors. In particular, the deploy user must be able to run <code>docker ps</code> without <code>sudo</code>.
       </p>
 
-      <h3>5. Webhook e' in esecuzione e l&apos;health endpoint risponde</h3>
+      <h3>5. Webhook is running and the health endpoint responds</h3>
       <pre><code>{replaceDomain(`systemctl status webhook
-curl -s https://webhook.tuodominio.dev/health`)}</code></pre>
+curl -s https://webhook.yourdomain.dev/health`)}</code></pre>
       <p>
-        Lo status deve essere &quot;active (running)&quot;. L&apos;health endpoint deve restituire una risposta positiva.
+        The status should be &quot;active (running)&quot;. The health endpoint should return a positive response.
       </p>
 
-      <h3>6. Chiave SSH configurata</h3>
-      <pre><code>{replaceDomain(`su - deploy -c "ssh -T -p 2222 git@git.tuodominio.dev"`)}</code></pre>
+      <h3>6. SSH key configured</h3>
+      <pre><code>{replaceDomain(`su - deploy -c "ssh -T -p 2222 git@git.yourdomain.dev"`)}</code></pre>
       <p>
-        Dovresti vedere un messaggio di benvenuto da Gitea. Se vedi un errore di &quot;host key verification&quot;, esegui:
+        You should see a welcome message from Gitea. If you see a &quot;host key verification&quot; error, run:
       </p>
-      <pre><code>{replaceDomain(`su - deploy -c 'ssh-keyscan -p 2222 git.tuodominio.dev >> /home/deploy/.ssh/known_hosts'`)}</code></pre>
+      <pre><code>{replaceDomain(`su - deploy -c 'ssh-keyscan -p 2222 git.yourdomain.dev >> /home/deploy/.ssh/known_hosts'`)}</code></pre>
 
-      <h3>7. Tutti i servizi sopravvivono al reboot</h3>
+      <h3>7. All services survive a reboot</h3>
       <pre><code>systemctl is-enabled caddy gitea webhook</code></pre>
       <p>
-        Tutti e tre devono restituire <code>enabled</code>. Questo significa che i servizi partiranno automaticamente al riavvio del server.
+        All three should return <code>enabled</code>. This means the services will start automatically when the server reboots.
       </p>
       <p>
-        Se un servizio non e' abilitato, attivalo con:
+        If a service is not enabled, activate it with:
       </p>
       <pre><code>{`systemctl enable caddy
 systemctl enable gitea
 systemctl enable webhook`}</code></pre>
 
-      <h2>Test completo con reboot</h2>
+      <h2>Full test with reboot</h2>
       <p>
-        Per una verifica definitiva, riavvia il server e controlla che tutto riparta:
+        For a definitive verification, reboot the server and check that everything comes back up:
       </p>
       <pre><code>{replaceDomain(`reboot
 
-# Dopo il riavvio, riconnettiti e verifica:
-ssh root@IP_DELLA_TUA_VPS
+# After the reboot, reconnect and verify:
+ssh root@YOUR_VPS_IP
 systemctl status caddy gitea webhook
-curl -s https://webhook.tuodominio.dev/health`)}</code></pre>
+curl -s https://webhook.yourdomain.dev/health`)}</code></pre>
 
-      <h2>Riepilogo credenziali</h2>
+      <h2>Credentials summary</h2>
       <p>
-        Durante il setup hai generato diverse credenziali. Assicurati di averle salvate in un posto sicuro:
+        During setup you generated several credentials. Make sure you have saved them in a secure location:
       </p>
 
       <table>
         <thead>
           <tr>
-            <th>Credenziale</th>
-            <th>Posizione</th>
-            <th>Utilizzo</th>
+            <th>Credential</th>
+            <th>Location</th>
+            <th>Usage</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td><strong>Deploy Token</strong></td>
             <td><code>/opt/webhook/.env</code></td>
-            <td>Autentica le richieste di deploy dalla skill Claude Code</td>
+            <td>Authenticates deploy requests from the Claude Code skill</td>
           </tr>
           <tr>
-            <td><strong>Token API Cloudflare</strong></td>
+            <td><strong>Cloudflare API Token</strong></td>
             <td><code>/etc/caddy/caddy.env</code></td>
-            <td>Generazione certificati SSL via DNS challenge</td>
+            <td>SSL certificate generation via DNS challenge</td>
           </tr>
           <tr>
-            <td><strong>Chiave SSH pubblica</strong></td>
+            <td><strong>SSH Public Key</strong></td>
             <td><code>/home/deploy/.ssh/id_ed25519.pub</code></td>
-            <td>Clonare repository da Gitea senza password</td>
+            <td>Clone repositories from Gitea without a password</td>
           </tr>
           <tr>
-            <td><strong>Credenziali admin Gitea</strong></td>
-            <td>Impostate durante il wizard</td>
-            <td>Accesso all&apos;interfaccia web di Gitea</td>
+            <td><strong>Gitea Admin Credentials</strong></td>
+            <td>Set during the wizard</td>
+            <td>Access to the Gitea web interface</td>
           </tr>
           <tr>
-            <td><strong>Token API Gitea</strong></td>
-            <td>Generato nelle impostazioni</td>
-            <td>Interazione programmatica con Gitea (usato dal webhook)</td>
+            <td><strong>Gitea API Token</strong></td>
+            <td>Generated in settings</td>
+            <td>Programmatic interaction with Gitea (used by the webhook)</td>
           </tr>
         </tbody>
       </table>
 
       <h2>Troubleshooting</h2>
-      <h3>Un servizio non e' attivo dopo il reboot</h3>
+      <h3>A service is not active after reboot</h3>
       <p>
-        Controlla i log del servizio per capire perche' non si e' avviato:
+        Check the service logs to understand why it did not start:
       </p>
       <pre><code>{`journalctl -u caddy -n 30 --no-pager
 journalctl -u gitea -n 30 --no-pager
 journalctl -u webhook -n 30 --no-pager`}</code></pre>
 
-      <h3>I certificati SSL non funzionano dopo il reboot</h3>
+      <h3>SSL certificates do not work after reboot</h3>
       <p>
-        Caddy conserva i certificati in cache. Se per qualche motivo non vengono caricati, riavvia Caddy:
+        Caddy caches certificates. If for some reason they are not loaded, restart Caddy:
       </p>
       <pre><code>systemctl restart caddy</code></pre>
       <p>
-        Attendi 1-2 minuti per la rigenerazione dei certificati e riprova.
+        Wait 1-2 minutes for certificate regeneration and try again.
       </p>
 
-      <h3>Docker non parte dopo il reboot</h3>
+      <h3>Docker does not start after reboot</h3>
       <p>
-        Verifica che il servizio Docker sia abilitato:
+        Verify that the Docker service is enabled:
       </p>
       <pre><code>{`systemctl is-enabled docker
 systemctl enable docker
@@ -168,11 +168,11 @@ systemctl start docker`}</code></pre>
       <hr />
       <p>
         {replaceDomain(
-          "Complimenti! Il tuo server Prolato e' configurato e pronto per i deploy su tuodominio.dev."
+          "Congratulations! Your Prolato server is configured and ready for deploys on yourdomain.dev."
         )}
       </p>
       <p>
-        <Link href="/docs/skill/install">Prossimo step: Installa la skill Prolato per Claude Code →</Link>
+        <Link href="/docs/skill/install">Next step: Install the Prolato skill for Claude Code →</Link>
       </p>
     </div>
   );

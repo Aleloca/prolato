@@ -11,43 +11,43 @@ export default function GiteaPage() {
       <h1>4. Gitea</h1>
       <p>
         {replaceDomain(
-          "In questo step installerai Gitea, un server Git leggero e self-hosted. Gitea sara' accessibile su git.tuodominio.dev e ospitera' i repository dei tuoi progetti."
+          "In this step you will install Gitea, a lightweight self-hosted Git server. Gitea will be accessible at git.yourdomain.dev and will host your project repositories."
         )}
       </p>
 
-      <h2>Prerequisiti</h2>
+      <h2>Prerequisites</h2>
       <ul>
-        <li>VPS configurata con utente deploy</li>
-        <li>{replaceDomain("Caddy in esecuzione con il blocco git.tuodominio.dev configurato")}</li>
+        <li>VPS configured with deploy user</li>
+        <li>{replaceDomain("Caddy running with the git.yourdomain.dev block configured")}</li>
       </ul>
 
-      <h2>Step 1: Scarica il binario di Gitea</h2>
+      <h2>Step 1: Download the Gitea binary</h2>
       <p>
-        Scarica l&apos;ultima versione stabile di Gitea direttamente dal repository ufficiale:
+        Download the latest stable version of Gitea directly from the official repository:
       </p>
       <pre><code>{`GITEA_VERSION=$(curl -s https://api.github.com/repos/go-gitea/gitea/releases/latest | jq -r .tag_name | sed 's/v//')
 wget -O /usr/local/bin/gitea "https://dl.gitea.io/gitea/$GITEA_VERSION/gitea-$GITEA_VERSION-linux-amd64"
 chmod +x /usr/local/bin/gitea`}</code></pre>
       <p>
-        Il primo comando recupera il numero dell&apos;ultima versione, il secondo scarica il binario e il terzo lo rende eseguibile.
+        The first command retrieves the latest version number, the second downloads the binary, and the third makes it executable.
       </p>
 
       <blockquote>
         <p>
-          Dopo questo step dovresti poter eseguire <code>gitea --version</code> e vedere la versione installata.
+          After this step you should be able to run <code>gitea --version</code> and see the installed version.
         </p>
       </blockquote>
 
-      <h2>Step 2: Crea l&apos;utente git</h2>
+      <h2>Step 2: Create the git user</h2>
       <p>
-        Gitea ha bisogno di un utente di sistema dedicato:
+        Gitea needs a dedicated system user:
       </p>
       <pre><code>{`adduser --system --shell /bin/bash --gecos 'Git Version Control' \\
   --group --disabled-password --home /home/git git`}</code></pre>
 
-      <h2>Step 3: Crea le directory</h2>
+      <h2>Step 3: Create the directories</h2>
       <p>
-        Crea le directory necessarie per Gitea:
+        Create the necessary directories for Gitea:
       </p>
       <pre><code>{`mkdir -p /var/lib/gitea/{custom,data,log}
 mkdir -p /etc/gitea
@@ -56,14 +56,14 @@ chown -R git:git /var/lib/gitea
 chown -R root:git /etc/gitea
 chmod 770 /etc/gitea`}</code></pre>
       <ul>
-        <li><code>/var/lib/gitea/</code> &mdash; dati, repository e log di Gitea</li>
-        <li><code>/etc/gitea/</code> &mdash; file di configurazione</li>
+        <li><code>/var/lib/gitea/</code> &mdash; Gitea data, repositories, and logs</li>
+        <li><code>/etc/gitea/</code> &mdash; configuration files</li>
       </ul>
 
-      <h2>Step 4: Configura app.ini</h2>
+      <h2>Step 4: Configure app.ini</h2>
       <p>
         {replaceDomain(
-          "Crea il file di configurazione principale di Gitea. I parametri importanti sono ROOT_URL, SSH_DOMAIN e SSH_PORT:"
+          "Create the main Gitea configuration file. The important parameters are ROOT_URL, SSH_DOMAIN, and SSH_PORT:"
         )}
       </p>
       <pre><code>{replaceDomain(`cat > /etc/gitea/app.ini << 'EOF'
@@ -73,11 +73,11 @@ RUN_USER = git
 
 [server]
 HTTP_PORT      = 3000
-ROOT_URL       = https://git.tuodominio.dev/
-SSH_DOMAIN     = git.tuodominio.dev
+ROOT_URL       = https://git.yourdomain.dev/
+SSH_DOMAIN     = git.yourdomain.dev
 SSH_PORT       = 2222
 START_SSH_SERVER = true
-DOMAIN         = git.tuodominio.dev
+DOMAIN         = git.yourdomain.dev
 DISABLE_SSH    = false
 LFS_START_SERVER = true
 
@@ -104,16 +104,16 @@ EOF
 
 chown root:git /etc/gitea/app.ini
 chmod 640 /etc/gitea/app.ini`)}</code></pre>
-      <p>Ecco cosa fanno i parametri principali:</p>
+      <p>Here&apos;s what the main parameters do:</p>
       <ul>
-        <li><code>HTTP_PORT = 3000</code> &mdash; Gitea ascolta sulla porta 3000 (Caddy fa da proxy)</li>
-        <li>{replaceDomain("<code>ROOT_URL</code> — l'URL pubblico di Gitea (https://git.tuodominio.dev/)")}</li>
-        <li><code>SSH_PORT = 2222</code> &mdash; porta SSH separata per non conflittuare con la porta 22 del sistema</li>
-        <li><code>DISABLE_REGISTRATION = true</code> &mdash; disabilita la registrazione pubblica dopo la creazione dell&apos;admin</li>
-        <li><code>DB_TYPE = sqlite3</code> &mdash; usa SQLite come database (nessun server database necessario)</li>
+        <li><code>HTTP_PORT = 3000</code> &mdash; Gitea listens on port 3000 (Caddy acts as proxy)</li>
+        <li>{replaceDomain("<code>ROOT_URL</code> — the public URL of Gitea (https://git.yourdomain.dev/)")}</li>
+        <li><code>SSH_PORT = 2222</code> &mdash; separate SSH port to avoid conflicting with the system&apos;s port 22</li>
+        <li><code>DISABLE_REGISTRATION = true</code> &mdash; disables public registration after the admin account is created</li>
+        <li><code>DB_TYPE = sqlite3</code> &mdash; uses SQLite as the database (no database server needed)</li>
       </ul>
 
-      <h2>Step 5: Crea il servizio systemd</h2>
+      <h2>Step 5: Create the systemd service</h2>
       <pre><code>{`cat > /etc/systemd/system/gitea.service << 'EOF'
 [Unit]
 Description=Gitea (Git with a cup of tea)
@@ -133,97 +133,97 @@ Environment=USER=git HOME=/home/git GITEA_WORK_DIR=/var/lib/gitea
 WantedBy=multi-user.target
 EOF`}</code></pre>
 
-      <h2>Step 6: Avvia Gitea</h2>
+      <h2>Step 6: Start Gitea</h2>
       <pre><code>{`systemctl daemon-reload
 systemctl enable --now gitea`}</code></pre>
 
       <blockquote>
         <p>
           {replaceDomain(
-            "Dopo questo step dovresti poter aprire https://git.tuodominio.dev nel browser e vedere la pagina di installazione iniziale di Gitea."
+            "After this step you should be able to open https://git.yourdomain.dev in the browser and see the Gitea initial installation page."
           )}
         </p>
       </blockquote>
 
-      <h2>Step 7: Completa il wizard di installazione</h2>
+      <h2>Step 7: Complete the installation wizard</h2>
       <p>
         {replaceDomain(
-          "Apri https://git.tuodominio.dev nel browser. Vedrai la pagina di configurazione iniziale. La maggior parte dei campi e' gia' precompilata dal file app.ini. Verifica che:"
+          "Open https://git.yourdomain.dev in the browser. You will see the initial configuration page. Most fields are already pre-filled from the app.ini file. Verify that:"
         )}
       </p>
       <ul>
-        <li>Il tipo di database sia <strong>SQLite3</strong></li>
-        <li>{replaceDomain("Il dominio SSH sia <strong>git.tuodominio.dev</strong>")}</li>
-        <li>La porta SSH sia <strong>2222</strong></li>
-        <li>{replaceDomain("L'URL base sia <strong>https://git.tuodominio.dev/</strong>")}</li>
+        <li>The database type is <strong>SQLite3</strong></li>
+        <li>{replaceDomain("The SSH domain is <strong>git.yourdomain.dev</strong>")}</li>
+        <li>The SSH port is <strong>2222</strong></li>
+        <li>{replaceDomain("The base URL is <strong>https://git.yourdomain.dev/</strong>")}</li>
       </ul>
       <p>
-        Clicca <strong>Installa Gitea</strong> in fondo alla pagina per completare il setup.
+        Click <strong>Install Gitea</strong> at the bottom of the page to complete the setup.
       </p>
 
-      <h2>Step 8: Crea l&apos;account amministratore</h2>
+      <h2>Step 8: Create the administrator account</h2>
       <p>
-        Dopo l&apos;installazione, registra il primo utente &mdash; sara' automaticamente l&apos;amministratore. Scegli un nome utente e una password sicura e salvali in un posto sicuro.
+        After installation, register the first user &mdash; it will automatically become the administrator. Choose a username and a secure password and save them in a safe place.
       </p>
 
       <blockquote>
         <p>
-          Dopo questo step dovresti poter accedere alla dashboard di Gitea con il tuo account admin.
+          After this step you should be able to access the Gitea dashboard with your admin account.
         </p>
       </blockquote>
 
-      <h2>Step 9: Genera un token API</h2>
+      <h2>Step 9: Generate an API token</h2>
       <p>
-        Il server webhook ha bisogno di un token API per interagire con Gitea (creare repository, configurare hook, ecc.). Per generarlo:
+        The webhook server needs an API token to interact with Gitea (create repositories, configure hooks, etc.). To generate it:
       </p>
       <ol>
-        <li>Accedi a Gitea con l&apos;account admin</li>
-        <li>Vai su <strong>Impostazioni</strong> (icona utente in alto a destra → Settings)</li>
-        <li>Clicca sulla tab <strong>Applicazioni</strong></li>
-        <li>Nella sezione &quot;Genera nuovo token&quot;, inserisci un nome (es. <code>prolato-webhook</code>)</li>
-        <li>Seleziona i permessi necessari (almeno: <code>repo</code>, <code>admin:repo_hook</code>, <code>admin:org</code>)</li>
-        <li>Clicca <strong>Genera token</strong></li>
-        <li>Copia il token generato e salvalo &mdash; ti servira' nello step Webhook</li>
+        <li>Log in to Gitea with the admin account</li>
+        <li>Go to <strong>Settings</strong> (user icon in the top right → Settings)</li>
+        <li>Click on the <strong>Applications</strong> tab</li>
+        <li>In the &quot;Generate new token&quot; section, enter a name (e.g. <code>prolato-webhook</code>)</li>
+        <li>Select the required permissions (at minimum: <code>repo</code>, <code>admin:repo_hook</code>, <code>admin:org</code>)</li>
+        <li>Click <strong>Generate token</strong></li>
+        <li>Copy the generated token and save it &mdash; you will need it in the Webhook step</li>
       </ol>
 
       <blockquote>
         <p>
-          Dopo questo step dovresti avere un token API Gitea che usera' il server webhook per gestire i repository.
+          After this step you should have a Gitea API token that the webhook server will use to manage repositories.
         </p>
       </blockquote>
 
-      <h2>Step 10: Verifica</h2>
+      <h2>Step 10: Verify</h2>
       <pre><code>{replaceDomain(`systemctl status gitea
-curl -s https://git.tuodominio.dev/api/v1/version`)}</code></pre>
+curl -s https://git.yourdomain.dev/api/v1/version`)}</code></pre>
       <p>
-        Il primo comando deve mostrare <code>active (running)</code>. Il secondo deve restituire un JSON con la versione di Gitea.
+        The first command should show <code>active (running)</code>. The second should return a JSON with the Gitea version.
       </p>
 
       <h2>Troubleshooting</h2>
-      <h3>Gitea non si avvia</h3>
+      <h3>Gitea won&apos;t start</h3>
       <p>
-        Controlla i log con <code>journalctl -u gitea -n 50</code>. Gli errori piu' comuni:
+        Check the logs with <code>journalctl -u gitea -n 50</code>. The most common errors:
       </p>
       <ul>
-        <li><strong>Permessi sul database</strong> &mdash; verifica che <code>/var/lib/gitea/data/</code> sia di proprietà dell&apos;utente <code>git</code></li>
-        <li><strong>Porta 3000 occupata</strong> &mdash; controlla con <code>ss -tlnp | grep 3000</code></li>
+        <li><strong>Database permissions</strong> &mdash; verify that <code>/var/lib/gitea/data/</code> is owned by the <code>git</code> user</li>
+        <li><strong>Port 3000 occupied</strong> &mdash; check with <code>ss -tlnp | grep 3000</code></li>
       </ul>
 
-      <h3>La pagina web non si carica</h3>
+      <h3>The web page won&apos;t load</h3>
       <p>
         {replaceDomain(
-          "Verifica che Caddy stia facendo proxy verso Gitea: controlla il blocco git.tuodominio.dev nel Caddyfile e che Caddy sia in esecuzione."
+          "Verify that Caddy is proxying to Gitea: check the git.yourdomain.dev block in the Caddyfile and that Caddy is running."
         )}
       </p>
 
-      <h3>Errore durante il wizard di installazione</h3>
+      <h3>Error during the installation wizard</h3>
       <p>
-        Se il wizard mostra errori, controlla i permessi delle directory <code>/var/lib/gitea</code> e <code>/etc/gitea</code>. Devono essere accessibili dall&apos;utente <code>git</code>.
+        If the wizard shows errors, check the permissions of the <code>/var/lib/gitea</code> and <code>/etc/gitea</code> directories. They must be accessible by the <code>git</code> user.
       </p>
 
       <hr />
       <p>
-        <Link href="/docs/setup/docker">Prossimo step: Docker →</Link>
+        <Link href="/docs/setup/docker">Next step: Docker →</Link>
       </p>
     </div>
   );

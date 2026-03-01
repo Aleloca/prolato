@@ -8,142 +8,142 @@ export default function SkillInstallPage() {
 
   return (
     <div>
-      <h1>Installazione della Skill</h1>
+      <h1>Skill Installation</h1>
       <p>
         {replaceDomain(
-          "In questa guida installerai la skill Prolato per Claude Code. La skill permette a Claude di deployare i tuoi progetti direttamente su tuodominio.dev con un semplice comando."
+          "In this guide you will install the Prolato skill for Claude Code. The skill allows Claude to deploy your projects directly to yourdomain.dev with a simple command."
         )}
       </p>
 
-      <h2>Prerequisiti</h2>
+      <h2>Prerequisites</h2>
       <ul>
         <li>
           {replaceDomain(
-            "VPS configurata con tutti i componenti installati (setup completato su tuodominio.dev)"
+            "VPS configured with all components installed (setup completed on yourdomain.dev)"
           )}
         </li>
         <li>
-          Claude Code installato e funzionante sul tuo computer locale
+          Claude Code installed and working on your local computer
         </li>
       </ul>
 
-      <h2>Passo 1: Clona il repository Prolato</h2>
+      <h2>Step 1: Clone the Prolato repository</h2>
       <p>
-        Apri il terminale sul tuo computer locale e clona il repository:
+        Open the terminal on your local computer and clone the repository:
       </p>
       <pre><code>git clone https://github.com/user/prolato.git</code></pre>
       <p>
-        Questo scarica tutto il codice di Prolato, inclusa la skill per Claude Code.
+        This downloads all the Prolato code, including the skill for Claude Code.
       </p>
 
-      <h2>Passo 2: Copia i file della skill</h2>
+      <h2>Step 2: Copy the skill files</h2>
       <p>
-        Copia la directory della skill nella cartella skills di Claude Code:
+        Copy the skill directory into the Claude Code skills folder:
       </p>
       <pre><code>cp -r prolato/skill/prolato ~/.claude/skills/prolato</code></pre>
       <p>
-        In alternativa, puoi creare un link simbolico. Questo e' utile se vuoi ricevere aggiornamenti con un semplice <code>git pull</code>:
+        Alternatively, you can create a symbolic link. This is useful if you want to receive updates with a simple <code>git pull</code>:
       </p>
       <pre><code>ln -s /path/to/prolato/skill/prolato ~/.claude/skills/prolato</code></pre>
       <p>
-        Sostituisci <code>/path/to/prolato</code> con il percorso assoluto dove hai clonato il repository.
+        Replace <code>/path/to/prolato</code> with the absolute path where you cloned the repository.
       </p>
 
       <blockquote>
         <p>
-          Dopo questo step dovresti vedere la directory <code>~/.claude/skills/prolato</code> con i file della skill.
+          After this step you should see the <code>~/.claude/skills/prolato</code> directory with the skill files.
         </p>
       </blockquote>
 
-      <h2>Passo 3: Copia e configura il file di configurazione</h2>
+      <h2>Step 3: Copy and configure the configuration file</h2>
       <p>
-        Copia il file di configurazione di esempio nella tua home directory:
+        Copy the example configuration file to your home directory:
       </p>
       <pre><code>cp prolato/skill/prolato/config.example.json ~/.deploy-config.json</code></pre>
       <p>
-        Apri il file <code>~/.deploy-config.json</code> con il tuo editor preferito e compila tutti i campi:
+        Open the file <code>~/.deploy-config.json</code> with your preferred editor and fill in all the fields:
       </p>
       <pre><code>{replaceDomain(`{
-  "gitea_url": "https://git.tuodominio.dev",
-  "gitea_username": "il-tuo-username",
-  "gitea_token": "token-api-gitea",
-  "gitea_admin_token": "token-admin-gitea",
-  "webhook_url": "https://webhook.tuodominio.dev",
-  "deploy_token": "token-deploy-dal-file-env",
-  "domain": "tuodominio.dev",
+  "gitea_url": "https://git.yourdomain.dev",
+  "gitea_username": "your-username",
+  "gitea_token": "gitea-api-token",
+  "gitea_admin_token": "gitea-admin-token",
+  "webhook_url": "https://webhook.yourdomain.dev",
+  "deploy_token": "deploy-token-from-env-file",
+  "domain": "yourdomain.dev",
   "ssh_key_path": "~/.ssh/deploy_key"
 }`)}</code></pre>
 
-      <p>Ecco cosa significa ogni campo:</p>
+      <p>Here&apos;s what each field means:</p>
       <table>
         <thead>
           <tr>
-            <th>Campo</th>
-            <th>Descrizione</th>
+            <th>Field</th>
+            <th>Description</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td><code>gitea_url</code></td>
-            <td>{replaceDomain("URL del server Gitea (es. https://git.tuodominio.dev)")}</td>
+            <td>{replaceDomain("URL of the Gitea server (e.g. https://git.yourdomain.dev)")}</td>
           </tr>
           <tr>
             <td><code>gitea_username</code></td>
-            <td>Il tuo username Gitea (creato durante il setup)</td>
+            <td>Your Gitea username (created during setup)</td>
           </tr>
           <tr>
             <td><code>gitea_token</code></td>
-            <td>Token API Gitea (generato nel setup, in Impostazioni &rarr; Applicazioni)</td>
+            <td>Gitea API token (generated during setup, in Settings &rarr; Applications)</td>
           </tr>
           <tr>
             <td><code>gitea_admin_token</code></td>
-            <td>Token admin Gitea (necessario per creare account di nuovi utenti)</td>
+            <td>Gitea admin token (required to create new user accounts)</td>
           </tr>
           <tr>
             <td><code>webhook_url</code></td>
-            <td>{replaceDomain("URL del webhook (es. https://webhook.tuodominio.dev)")}</td>
+            <td>{replaceDomain("URL of the webhook (e.g. https://webhook.yourdomain.dev)")}</td>
           </tr>
           <tr>
             <td><code>deploy_token</code></td>
-            <td>Token di deploy (si trova nel file <code>/opt/webhook/.env</code> sul VPS)</td>
+            <td>Deploy token (found in the <code>/opt/webhook/.env</code> file on the VPS)</td>
           </tr>
           <tr>
             <td><code>domain</code></td>
-            <td>{replaceDomain("Il tuo dominio (es. tuodominio.dev)")}</td>
+            <td>{replaceDomain("Your domain (e.g. yourdomain.dev)")}</td>
           </tr>
           <tr>
             <td><code>ssh_key_path</code></td>
-            <td>Percorso della chiave SSH (es. <code>~/.ssh/deploy_key</code>)</td>
+            <td>Path to the SSH key (e.g. <code>~/.ssh/deploy_key</code>)</td>
           </tr>
         </tbody>
       </table>
 
-      <h2>Passo 4: Primo avvio</h2>
+      <h2>Step 4: First launch</h2>
       <p>
-        Apri Claude Code e invoca la skill per la prima volta:
+        Open Claude Code and invoke the skill for the first time:
       </p>
       <pre><code>/prolato</code></pre>
       <p>
-        La skill verifichera' la configurazione e ti guidera' nel setup iniziale. Segui le istruzioni a schermo per completare la configurazione.
+        The skill will verify the configuration and guide you through the initial setup. Follow the on-screen instructions to complete the configuration.
       </p>
 
-      <h2>Verifica</h2>
+      <h2>Verification</h2>
       <p>
-        Per verificare che la skill sia installata correttamente, invoca il comando <code>/prolato</code> in Claude Code. La skill dovrebbe rispondere senza errori e mostrare le opzioni disponibili.
+        To verify that the skill is installed correctly, invoke the <code>/prolato</code> command in Claude Code. The skill should respond without errors and display the available options.
       </p>
       <p>
-        Se ricevi errori, controlla che:
+        If you receive errors, check that:
       </p>
       <ul>
-        <li>Il file <code>~/.deploy-config.json</code> esista e contenga tutti i campi</li>
-        <li>I token siano validi e non scaduti</li>
-        <li>{replaceDomain("Il VPS sia raggiungibile (prova con curl https://webhook.tuodominio.dev/health)")}</li>
-        <li>La chiave SSH sia configurata correttamente</li>
+        <li>The file <code>~/.deploy-config.json</code> exists and contains all fields</li>
+        <li>The tokens are valid and not expired</li>
+        <li>{replaceDomain("The VPS is reachable (try with curl https://webhook.yourdomain.dev/health)")}</li>
+        <li>The SSH key is configured correctly</li>
       </ul>
 
       <hr />
       <p>
-        <Link href="/docs/skill/usage">Prossimo step: Utilizzo della skill &rarr;</Link>
+        <Link href="/docs/skill/usage">Next step: Skill Usage &rarr;</Link>
       </p>
     </div>
   );
