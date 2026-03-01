@@ -229,4 +229,15 @@ describe('Server', () => {
       expect(res.status).toBe(404);
     });
   });
+
+  describe('Rate limiting', () => {
+    it('returns 429 after too many requests', async () => {
+      const promises = Array.from({ length: 110 }, () =>
+        request(app).get('/health')
+      );
+      const responses = await Promise.all(promises);
+      const tooMany = responses.filter(r => r.status === 429);
+      expect(tooMany.length).toBeGreaterThan(0);
+    });
+  });
 });

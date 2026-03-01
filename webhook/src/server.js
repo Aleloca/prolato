@@ -1,4 +1,5 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import { createAuthMiddleware } from './lib/auth.js';
 import { validateDeployPayload, validateLines } from './lib/validate.js';
 import { Deployer } from './lib/deployer.js';
@@ -6,6 +7,15 @@ import { Deployer } from './lib/deployer.js';
 export function createApp({ config, registry, lock, logger, caddy, shell }) {
   const app = express();
   app.use(express.json({ limit: '50mb' }));
+
+  const limiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many requests, please try again later' },
+  });
+  app.use(limiter);
 
   const auth = createAuthMiddleware(config.deployToken);
   const deployer = new Deployer({ registry, lock, logger, caddy, shell, config });
