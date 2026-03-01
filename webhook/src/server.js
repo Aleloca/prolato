@@ -33,7 +33,8 @@ export function createApp({ config, registry, lock, logger, caddy, shell }) {
     try {
       res.json({ status: 'ok', timestamp: new Date().toISOString() });
     } catch (err) {
-      res.status(500).json({ status: 'error', error: err.message });
+      console.error(err);
+      res.status(500).json({ status: 'error', error: 'Internal server error' });
     }
   });
 
@@ -47,7 +48,8 @@ export function createApp({ config, registry, lock, logger, caddy, shell }) {
       const projects = await registry.listProjects(owner);
       res.json({ projects });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      console.error(err);
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
@@ -64,7 +66,8 @@ export function createApp({ config, registry, lock, logger, caddy, shell }) {
       if (err.message === 'Logs only available for Docker projects') {
         return res.status(400).json({ error: err.message });
       }
-      res.status(500).json({ error: err.message });
+      console.error(err);
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
@@ -77,7 +80,8 @@ export function createApp({ config, registry, lock, logger, caddy, shell }) {
       if (err.message === 'Project not found') {
         return res.status(404).json({ error: err.message });
       }
-      res.status(500).json({ error: err.message });
+      console.error(err);
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
@@ -104,7 +108,8 @@ export function createApp({ config, registry, lock, logger, caddy, shell }) {
       if (err.message === 'No previous deploy available for rollback') {
         return res.status(400).json({ error: err.message });
       }
-      res.status(500).json({ error: err.message });
+      console.error(err);
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
@@ -128,7 +133,8 @@ export function createApp({ config, registry, lock, logger, caddy, shell }) {
       if (err.message === 'Project not found') {
         return res.status(404).json({ error: err.message });
       }
-      res.status(500).json({ error: err.message });
+      console.error(err);
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
@@ -141,7 +147,8 @@ export function createApp({ config, registry, lock, logger, caddy, shell }) {
       }
       res.json({ project });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      console.error(err);
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
@@ -163,7 +170,8 @@ export function createApp({ config, registry, lock, logger, caddy, shell }) {
       if (err.message.includes('belongs to')) {
         return res.status(403).json({ error: err.message });
       }
-      res.status(500).json({ error: err.message });
+      console.error(err);
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 

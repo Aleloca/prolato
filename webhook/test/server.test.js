@@ -249,4 +249,18 @@ describe('Server', () => {
       expect(res.headers['x-powered-by']).toBeUndefined();
     });
   });
+
+  describe('Error handling', () => {
+    it('does not leak internal error details on 500', async () => {
+      const registry = app.locals.registry;
+      registry.read = async () => { throw new Error('EACCES: permission denied, open registry.json'); };
+
+      const res = await request(app)
+        .get('/projects')
+        .set('Authorization', 'Bearer test-token-12345');
+      expect(res.status).toBe(500);
+      expect(res.body.error).not.toMatch(/EACCES/);
+      expect(res.body.error).toBe('Internal server error');
+    });
+  });
 });
