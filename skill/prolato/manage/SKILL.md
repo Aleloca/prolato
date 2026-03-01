@@ -37,14 +37,14 @@ Clearly show what will be deleted, especially if there is a database with data.
 
 ```bash
 curl -s -X DELETE -H "Authorization: Bearer {DEPLOY_TOKEN}" \
-    "{WEBHOOK_URL}/projects/{PROJECT_NAME}"
+    "{WEBHOOK_URL}/projects/{PROJECT_NAME}?owner={USERNAME}"
 ```
 
 ## Rollback
 
 ```bash
 curl -s -X POST -H "Authorization: Bearer {DEPLOY_TOKEN}" \
-    "{WEBHOOK_URL}/projects/{PROJECT_NAME}/rollback"
+    "{WEBHOOK_URL}/projects/{PROJECT_NAME}/rollback?owner={USERNAME}"
 ```
 
 Show the result. Inform the user that only one level of rollback is supported.
