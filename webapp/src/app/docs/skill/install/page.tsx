@@ -25,6 +25,17 @@ export default function SkillInstallPage() {
         <li>
           Claude Code installed and working on your local computer
         </li>
+        <li>
+          {replaceDomain(
+            "A Gitea account — register at https://git.yourdomain.dev (self-registration is open)"
+          )}
+        </li>
+        <li>
+          A Gitea API token — after registering, go to <strong>Settings → Applications → Generate New Token</strong> and select the scopes <code>write:repository</code> and <code>write:user</code>
+        </li>
+        <li>
+          The <strong>deploy token</strong> and <strong>domain</strong> provided by the system admin
+        </li>
       </ul>
 
       <h2>Step 1: Clone the Prolato repository</h2>
@@ -67,7 +78,6 @@ export default function SkillInstallPage() {
   "gitea_url": "https://git.yourdomain.dev",
   "gitea_username": "your-username",
   "gitea_token": "gitea-api-token",
-  "gitea_admin_token": "gitea-admin-token",
   "webhook_url": "https://webhook.yourdomain.dev",
   "deploy_token": "deploy-token-from-env-file",
   "domain": "yourdomain.dev",
@@ -89,15 +99,11 @@ export default function SkillInstallPage() {
           </tr>
           <tr>
             <td><code>gitea_username</code></td>
-            <td>Your Gitea username (created during setup)</td>
+            <td>Your Gitea username (the one you chose when registering on Gitea)</td>
           </tr>
           <tr>
             <td><code>gitea_token</code></td>
-            <td>Gitea API token (generated during setup, in Settings &rarr; Applications)</td>
-          </tr>
-          <tr>
-            <td><code>gitea_admin_token</code></td>
-            <td>Gitea admin token (required to create new user accounts)</td>
+            <td>Your personal Gitea API token (created in Settings &rarr; Applications with <code>write:repository</code> and <code>write:user</code> scopes)</td>
           </tr>
           <tr>
             <td><code>webhook_url</code></td>
@@ -105,7 +111,7 @@ export default function SkillInstallPage() {
           </tr>
           <tr>
             <td><code>deploy_token</code></td>
-            <td>Deploy token (found in the <code>/opt/webhook/.env</code> file on the VPS)</td>
+            <td>Deploy token (provided by the system admin)</td>
           </tr>
           <tr>
             <td><code>domain</code></td>

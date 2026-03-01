@@ -10,11 +10,12 @@ This sub-skill runs only the first time a user uses Prolato. It configures every
 ## Prerequisites
 
 The system admin must provide you with:
-- The Gitea server URL (e.g., `https://git.yourdomain.dev`)
-- The webhook URL (e.g., `https://webhook.yourdomain.dev`)
-- The webhook deploy token
-- The Gitea admin token (only for first-time setup — needed to create your account)
-- The domain (e.g., `yourdomain.dev`)
+- The **domain** (e.g., `yourdomain.dev`)
+- The **deploy token** for the webhook
+
+The user must have already:
+- Registered an account on Gitea (`https://git.{DOMAIN}`)
+- Created an API token from Gitea UI (Settings → Applications → Generate New Token, with scopes: `write:repository`, `write:user`)
 
 ## Step 1: Gather Information
 
@@ -23,7 +24,8 @@ Ask the user for ONLY this information:
 - **Email** (for Git commits, e.g., "john@company.com")
 - **Domain** of the Prolato server (e.g., "prolato.dev")
 - **Deploy token** for the webhook
-- **Gitea admin token** (if the user is the admin setting up the system for the first time)
+- **Gitea username** (the username they registered on Gitea)
+- **Gitea token** (the API token they created from the Gitea UI)
 
 ## Step 2: Generate SSH Key
 
@@ -58,55 +60,22 @@ Host git.{DOMAIN}
 - `StrictHostKeyChecking no`: avoids the confirmation prompt on first connection.
 - Check if the block already exists before adding it. If it exists, update it.
 
-## Step 4: Create Gitea Account
-
-Generate username and password, then create the account via admin API.
+## Step 4: Add SSH Key to Gitea
 
 ```bash
-# Generate username from name (e.g., "John Doe" → "john.doe")
-# Use only lowercase letters, dots to separate
-# If already taken, add numeric suffix (john.doe.2)
-
-# Generate random password
-GITEA_PASSWORD=$(openssl rand -hex 16)
-
-# Create user via admin API
-curl -s -X POST "https://git.{DOMAIN}/api/v1/admin/users" \
-    -H "Authorization: token {ADMIN_TOKEN}" \
-    -H "Content-Type: application/json" \
-    -d '{
-        "username": "{USERNAME}",
-        "email": "{EMAIL}",
-        "password": "'$GITEA_PASSWORD'",
-        "must_change_password": false,
-        "visibility": "private"
-    }'
-```
-
-Check the response. If it returns a "user already exists" error, the account already exists — proceed to the next step using existing credentials or ask the user.
-
-## Step 5: Generate User Token and Add SSH Key
-
-```bash
-# Generate Gitea user token
-USER_TOKEN=$(curl -s -X POST "https://git.{DOMAIN}/api/v1/users/{USERNAME}/tokens" \
-    -u "{USERNAME}:$GITEA_PASSWORD" \
-    -H "Content-Type: application/json" \
-    -d '{"name": "deploy-token", "scopes": ["write:repository", "write:user"]}' | grep -o '"sha1":"[^"]*"' | cut -d'"' -f4)
-
 # Read the public key
 SSH_PUBLIC_KEY=$(cat ~/.ssh/deploy_key.pub)
 
-# Add the SSH key to the Gitea account
+# Add the SSH key to the Gitea account using the user's token
 curl -s -X POST "https://git.{DOMAIN}/api/v1/user/keys" \
-    -H "Authorization: token $USER_TOKEN" \
+    -H "Authorization: token {GITEA_TOKEN}" \
     -H "Content-Type: application/json" \
     -d "{\"title\": \"deploy-key-$(hostname)\", \"key\": \"$SSH_PUBLIC_KEY\"}"
 ```
 
 If the key already exists ("key already exists" error), that's fine — continue.
 
-## Step 6: Configure Local Git
+## Step 5: Configure Local Git
 
 ```bash
 # Check if a global Git configuration already exists
@@ -124,7 +93,7 @@ else
 fi
 ```
 
-## Step 7: Save Configuration
+## Step 6: Save Configuration
 
 Write the file `~/.deploy-config.json`:
 
@@ -132,8 +101,7 @@ Write the file `~/.deploy-config.json`:
 {
     "gitea_url": "https://git.{DOMAIN}",
     "gitea_username": "{USERNAME}",
-    "gitea_token": "{USER_TOKEN}",
-    "gitea_admin_token": "{ADMIN_TOKEN}",
+    "gitea_token": "{GITEA_TOKEN}",
     "webhook_url": "https://webhook.{DOMAIN}",
     "deploy_token": "{DEPLOY_TOKEN}",
     "domain": "{DOMAIN}",
@@ -143,7 +111,7 @@ Write the file `~/.deploy-config.json`:
 
 Set restrictive permissions: `chmod 600 ~/.deploy-config.json`
 
-## Step 8: Connection Test
+## Step 7: Connection Test
 
 Run all three tests. All must pass.
 
@@ -152,7 +120,7 @@ Run all three tests. All must pass.
 ssh -T git@git.{DOMAIN} -p 2222 -o ConnectTimeout=5 2>&1
 
 # 2. Gitea API test
-curl -s -H "Authorization: token {USER_TOKEN}" \
+curl -s -H "Authorization: token {GITEA_TOKEN}" \
     "https://git.{DOMAIN}/api/v1/user" | grep -q '"login"'
 
 # 3. Webhook test

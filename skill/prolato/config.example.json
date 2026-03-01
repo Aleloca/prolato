@@ -2,7 +2,6 @@
     "gitea_url": "https://git.yourdomain.dev",
     "gitea_username": "",
     "gitea_token": "",
-    "gitea_admin_token": "",
     "webhook_url": "https://webhook.yourdomain.dev",
     "deploy_token": "",
     "domain": "yourdomain.dev",

@@ -92,7 +92,7 @@ ROOT = /var/lib/gitea/data/repositories
 INSTALL_LOCK = false
 
 [service]
-DISABLE_REGISTRATION       = true
+DISABLE_REGISTRATION       = false
 REQUIRE_SIGNIN_VIEW        = false
 DEFAULT_KEEP_EMAIL_PRIVATE = true
 
@@ -109,7 +109,7 @@ chmod 640 /etc/gitea/app.ini`)}</code></pre>
         <li><code>HTTP_PORT = 3000</code> &mdash; Gitea listens on port 3000 (Caddy acts as proxy)</li>
         <li>{replaceDomain("<code>ROOT_URL</code> — the public URL of Gitea (https://git.yourdomain.dev/)")}</li>
         <li><code>SSH_PORT = 2222</code> &mdash; separate SSH port to avoid conflicting with the system&apos;s port 22</li>
-        <li><code>DISABLE_REGISTRATION = true</code> &mdash; disables public registration after the admin account is created</li>
+        <li><code>DISABLE_REGISTRATION = false</code> &mdash; allows users to self-register on Gitea (each user creates their own account)</li>
         <li><code>DB_TYPE = sqlite3</code> &mdash; uses SQLite as the database (no database server needed)</li>
       </ul>
 
@@ -165,6 +165,9 @@ systemctl enable --now gitea`}</code></pre>
       <p>
         After installation, register the first user &mdash; it will automatically become the administrator. Choose a username and a secure password and save them in a safe place.
       </p>
+      <p>
+        Since registration is open (<code>DISABLE_REGISTRATION = false</code>), other team members will be able to create their own accounts directly from the Gitea login page. Each user will then generate their own API token to use with the Prolato skill (see the <Link href="/docs/skill/install">Skill Installation</Link> guide).
+      </p>
 
       <blockquote>
         <p>
@@ -172,9 +175,9 @@ systemctl enable --now gitea`}</code></pre>
         </p>
       </blockquote>
 
-      <h2>Step 9: Generate an API token</h2>
+      <h2>Step 9: Generate an admin API token</h2>
       <p>
-        The webhook server needs an API token to interact with Gitea (create repositories, configure hooks, etc.). To generate it:
+        The webhook server needs an admin API token to interact with Gitea (create repositories, configure hooks, etc.). To generate it:
       </p>
       <ol>
         <li>Log in to Gitea with the admin account</li>
@@ -185,6 +188,9 @@ systemctl enable --now gitea`}</code></pre>
         <li>Click <strong>Generate token</strong></li>
         <li>Copy the generated token and save it &mdash; you will need it in the Webhook step</li>
       </ol>
+      <p>
+        <strong>Note:</strong> this is the <em>admin</em> token for the webhook server. Regular users do not need this token &mdash; they will create their own personal token during the <Link href="/docs/skill/install">Skill Installation</Link> step.
+      </p>
 
       <blockquote>
         <p>
