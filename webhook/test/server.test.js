@@ -28,7 +28,10 @@ describe('Server', () => {
     const registry = new Registry(join(tempDir, 'registry.json'));
     const lock = new DeployLock();
     const logger = new DeployLogger(join(tempDir, 'deploy-log.jsonl'));
-    const mockShell = { exec: async () => '' };
+    const mockShell = {
+      exec: async () => '',
+      execSafe: async () => 'abc123\n',
+    };
     const caddy = new CaddyManager(caddyDir, config.domain, mockShell);
     app = createApp({ config, registry, lock, logger, caddy, shell: mockShell });
   });

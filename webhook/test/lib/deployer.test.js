@@ -30,7 +30,10 @@ describe('Deployer', () => {
     registry = new Registry(join(tempDir, 'registry.json'));
     lock = new DeployLock();
     logger = new DeployLogger(join(tempDir, 'deploy-log.jsonl'));
-    mockShell = { exec: vi.fn().mockResolvedValue('abc123\n') };
+    mockShell = {
+      exec: vi.fn().mockResolvedValue(''),
+      execSafe: vi.fn().mockResolvedValue('abc123\n'),
+    };
     caddy = new CaddyManager(caddyDir, 'example.dev', mockShell);
 
     config = {
@@ -60,8 +63,16 @@ describe('Deployer', () => {
       const result = await deployer.deploy(payload);
       expect(result.success).toBe(true);
       expect(result.url).toBe('https://my-landing.example.dev');
-      const calls = mockShell.exec.mock.calls.map(c => c[0]);
-      expect(calls.some(c => c.includes('git clone'))).toBe(true);
+      const cloneCall = mockShell.execSafe.mock.calls.find(c => c[0] === 'git' && c[1].includes('clone'));
+      expect(cloneCall).toBeDefined();
+    });
+
+    it('uses execSafe with argument arrays instead of string interpolation', async () => {
+      await deployer.deploy(payload);
+      expect(mockShell.execSafe).toHaveBeenCalled();
+      const cloneCall = mockShell.execSafe.mock.calls.find(c => c[0] === 'git');
+      expect(cloneCall).toBeDefined();
+      expect(cloneCall[1]).toContain('clone');
     });
 
     it('saves project to registry', async () => {
@@ -74,13 +85,13 @@ describe('Deployer', () => {
 
     it('pulls for existing static project (update)', async () => {
       await deployer.deploy(payload);
-      mockShell.exec.mockClear();
-      mockShell.exec.mockResolvedValue('def456\n');
+      mockShell.execSafe.mockClear();
+      mockShell.execSafe.mockResolvedValue('def456\n');
 
       const result = await deployer.deploy(payload);
       expect(result.success).toBe(true);
-      const calls = mockShell.exec.mock.calls.map(c => c[0]);
-      expect(calls.some(c => c.includes('git pull'))).toBe(true);
+      const pullCall = mockShell.execSafe.mock.calls.find(c => c[0] === 'git' && c[1].includes('pull'));
+      expect(pullCall).toBeDefined();
     });
 
     it('rejects concurrent deploy for same project', async () => {
@@ -98,13 +109,13 @@ describe('Deployer', () => {
     });
 
     it('releases lock even on failure', async () => {
-      mockShell.exec.mockRejectedValueOnce(new Error('git clone failed'));
+      mockShell.execSafe.mockRejectedValueOnce(new Error('git clone failed'));
       await expect(deployer.deploy(payload)).rejects.toThrow();
       expect(lock.isLocked('my-landing')).toBe(false);
     });
 
     it('cleans up registry on failure', async () => {
-      mockShell.exec.mockRejectedValueOnce(new Error('git clone failed'));
+      mockShell.execSafe.mockRejectedValueOnce(new Error('git clone failed'));
       await expect(deployer.deploy(payload)).rejects.toThrow();
       const project = await registry.getProject('my-landing');
       expect(project).toBeNull();
@@ -123,8 +134,8 @@ describe('Deployer', () => {
 
     it('saves previous_sha on update', async () => {
       await deployer.deploy(payload);
-      mockShell.exec.mockClear();
-      mockShell.exec.mockResolvedValue('def456\n');
+      mockShell.execSafe.mockClear();
+      mockShell.execSafe.mockResolvedValue('def456\n');
       await deployer.deploy(payload);
       const project = await registry.getProject('my-landing');
       expect(project.current_sha).toBe('def456');
@@ -148,9 +159,10 @@ describe('Deployer', () => {
       expect(result.success).toBe(true);
       expect(result.url).toBe('https://my-api.example.dev');
       expect(result.deploy_type).toBe('docker');
-      const calls = mockShell.exec.mock.calls.map(c => c[0]);
-      expect(calls.some(c => c.includes('git clone'))).toBe(true);
-      expect(calls.some(c => c.includes('docker compose up'))).toBe(true);
+      const cloneCall = mockShell.execSafe.mock.calls.find(c => c[0] === 'git' && c[1].includes('clone'));
+      expect(cloneCall).toBeDefined();
+      const composeCall = mockShell.execSafe.mock.calls.find(c => c[0] === 'docker' && c[1].includes('up'));
+      expect(composeCall).toBeDefined();
     });
 
     it('assigns port from registry', async () => {
@@ -177,18 +189,19 @@ describe('Deployer', () => {
 
     it('updates with docker compose down then up', async () => {
       await deployer.deploy(payload);
-      mockShell.exec.mockClear();
-      mockShell.exec.mockResolvedValue('def456\n');
+      mockShell.execSafe.mockClear();
+      mockShell.execSafe.mockResolvedValue('def456\n');
       await deployer.deploy(payload);
-      const calls = mockShell.exec.mock.calls.map(c => c[0]);
-      expect(calls.some(c => c.includes('docker compose down'))).toBe(true);
-      expect(calls.some(c => c.includes('docker compose up'))).toBe(true);
+      const downCall = mockShell.execSafe.mock.calls.find(c => c[0] === 'docker' && c[1].includes('down'));
+      expect(downCall).toBeDefined();
+      const upCall = mockShell.execSafe.mock.calls.find(c => c[0] === 'docker' && c[1].includes('up'));
+      expect(upCall).toBeDefined();
     });
 
     it('cleans up on docker compose failure', async () => {
       // First call (git clone) succeeds, second (docker compose) fails
       let callCount = 0;
-      mockShell.exec.mockImplementation(() => {
+      mockShell.execSafe.mockImplementation(() => {
         callCount++;
         if (callCount >= 3) { // After clone and rev-parse, docker compose fails
           return Promise.reject(new Error('docker compose failed'));
@@ -212,8 +225,8 @@ describe('Deployer', () => {
         deploy_type: 'static',
         owner: 'alice',
       });
-      mockShell.exec.mockClear();
-      mockShell.exec.mockResolvedValue('def456\n');
+      mockShell.execSafe.mockClear();
+      mockShell.execSafe.mockResolvedValue('def456\n');
       await deployer.deploy({
         project_name: 'my-site',
         git_repo_url: 'git@git.example.dev:alice/my-site.git',
@@ -222,12 +235,12 @@ describe('Deployer', () => {
         owner: 'alice',
       });
 
-      mockShell.exec.mockClear();
-      mockShell.exec.mockResolvedValue('');
+      mockShell.execSafe.mockClear();
+      mockShell.execSafe.mockResolvedValue('');
       const result = await deployer.rollback('my-site');
       expect(result.success).toBe(true);
-      const calls = mockShell.exec.mock.calls.map(c => c[0]);
-      expect(calls.some(c => c.includes('git checkout'))).toBe(true);
+      const checkoutCall = mockShell.execSafe.mock.calls.find(c => c[0] === 'git' && c[1].includes('checkout'));
+      expect(checkoutCall).toBeDefined();
     });
 
     it('rejects rollback when no previous_sha', async () => {

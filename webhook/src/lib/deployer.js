@@ -75,13 +75,13 @@ export class Deployer {
       });
 
       try {
-        await this.shell.exec(`git clone -b ${branch} ${git_repo_url} ${projectPath}`);
+        await this.shell.execSafe('git', ['clone', '-b', branch, git_repo_url, projectPath]);
       } catch (error) {
         await this._cleanup(cleanupActions);
         throw error;
       }
       cleanupActions.push(async () => {
-        await this.shell.exec(`rm -rf ${projectPath}`);
+        await this.shell.execSafe('rm', ['-rf', projectPath]);
       });
 
       const sha = await this._getHeadSha(projectPath);
@@ -90,7 +90,7 @@ export class Deployer {
       const existing = await this.registry.getProject(project_name);
       const previousSha = existing.current_sha;
 
-      await this.shell.exec(`cd ${projectPath} && git pull origin ${branch}`);
+      await this.shell.execSafe('git', ['-C', projectPath, 'pull', 'origin', branch]);
 
       const sha = await this._getHeadSha(projectPath);
       await this.registry.updateProject(project_name, {
@@ -116,7 +116,7 @@ export class Deployer {
       const existing = await this.registry.getProject(project_name);
       const previousSha = existing.current_sha;
 
-      await this.shell.exec(`cd ${projectPath} && git pull`);
+      await this.shell.execSafe('git', ['-C', projectPath, 'pull']);
 
       if (env_production) {
         const { writeFileSync, mkdirSync, existsSync } = await import('node:fs');
@@ -125,7 +125,8 @@ export class Deployer {
         writeFileSync(join(projectPath, '.env.production'), envContent, 'utf-8');
       }
 
-      await this.shell.exec(`cd ${projectPath} && docker compose down && docker compose up -d --build`);
+      await this.shell.execSafe('docker', ['compose', 'down'], { cwd: projectPath });
+      await this.shell.execSafe('docker', ['compose', 'up', '-d', '--build'], { cwd: projectPath });
 
       const sha = await this._getHeadSha(projectPath);
       await this.registry.updateProject(project_name, {
@@ -151,7 +152,7 @@ export class Deployer {
 
       try {
         // Clone
-        await this.shell.exec(`git clone -b ${branch} ${git_repo_url} ${projectPath}`);
+        await this.shell.execSafe('git', ['clone', '-b', branch, git_repo_url, projectPath]);
 
         // Write .env.production
         if (env_production) {
@@ -175,7 +176,7 @@ export class Deployer {
         }
 
         // Docker compose up
-        await this.shell.exec(`cd ${projectPath} && docker compose up -d --build`);
+        await this.shell.execSafe('docker', ['compose', 'up', '-d', '--build'], { cwd: projectPath });
 
         // Caddy config
         this.caddy.generateConfig(project_name, assignedPort);
@@ -208,10 +209,11 @@ export class Deployer {
     try {
       const projectPath = this._getProjectPath(project, projectName);
 
-      await this.shell.exec(`cd ${projectPath} && git checkout ${project.previous_sha}`);
+      await this.shell.execSafe('git', ['-C', projectPath, 'checkout', project.previous_sha]);
 
       if (project.deploy_type === 'docker') {
-        await this.shell.exec(`cd ${projectPath} && docker compose down && docker compose up -d --build`);
+        await this.shell.execSafe('docker', ['compose', 'down'], { cwd: projectPath });
+        await this.shell.execSafe('docker', ['compose', 'up', '-d', '--build'], { cwd: projectPath });
       }
 
       await this.registry.updateProject(projectName, {
@@ -248,10 +250,10 @@ export class Deployer {
     const projectPath = this._getProjectPath(project, projectName);
 
     if (project.deploy_type === 'docker') {
-      await this.shell.exec(`cd ${projectPath} && docker compose down -v`).catch(() => {});
+      await this.shell.execSafe('docker', ['compose', 'down', '-v'], { cwd: projectPath }).catch(() => {});
     }
 
-    await this.shell.exec(`rm -rf ${projectPath}`).catch(() => {});
+    await this.shell.execSafe('rm', ['-rf', projectPath]).catch(() => {});
 
     if (project.deploy_type === 'docker') {
       this.caddy.removeConfig(projectName);
@@ -276,8 +278,8 @@ export class Deployer {
     if (project.deploy_type !== 'docker') throw new Error('Logs only available for Docker projects');
 
     const projectPath = this._getProjectPath(project, projectName);
-    const logs = await this.shell.exec(
-      `cd ${projectPath} && docker compose logs --tail=${lines} 2>&1`
+    const logs = await this.shell.execSafe(
+      'docker', ['compose', 'logs', '--tail=' + String(lines)], { cwd: projectPath }
     );
     return { logs };
   }
@@ -294,8 +296,8 @@ export class Deployer {
       return { status: hasIndex ? 'serving' : 'missing_files', deploy_type: 'static' };
     }
 
-    const psOutput = await this.shell.exec(
-      `cd ${projectPath} && docker compose ps --format json 2>&1`
+    const psOutput = await this.shell.execSafe(
+      'docker', ['compose', 'ps', '--format', 'json'], { cwd: projectPath }
     ).catch(() => '');
     return { status: 'checked', deploy_type: 'docker', containers: psOutput };
   }
@@ -309,7 +311,7 @@ export class Deployer {
   }
 
   async _getHeadSha(projectPath) {
-    const output = await this.shell.exec(`git -C ${projectPath} rev-parse HEAD`);
+    const output = await this.shell.execSafe('git', ['-C', projectPath, 'rev-parse', 'HEAD']);
     return output.trim();
   }
 
