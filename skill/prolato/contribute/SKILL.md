@@ -1,3 +1,8 @@
+---
+name: prolato-contribute
+description: Self-reflection and community contribution after a successful deploy
+---
+
 # Contribute — Self-Evolving Skill
 
 This module runs after every successful deploy. It checks whether Claude had to improvise
@@ -84,9 +89,15 @@ The PR will contain ONLY generic detection rules and templates — no informatio
 
 ## Step 4: Check for Duplicate PRs
 
+For each gap identified in Step 2, search for open PRs using the specific technology keyword
+from the gap analysis (e.g., "redis", "bullmq", "mongodb"):
+
 ```bash
-gh pr list --repo Aleloca/prolato --state open --search "contrib" --json title,url
+gh pr list --repo Aleloca/prolato --state open --search "{technology_keyword}" --json title,url
 ```
+
+Where `{technology_keyword}` is the main technology name from each gap (e.g., if the gap
+describes "Missing detection rule for Redis", search for "redis").
 
 Check if any open PR already covers the same technologies. For example, if there's already
 a PR titled "Add Redis support", don't open another one.
@@ -114,41 +125,39 @@ CRITICAL RULES:
 
 ## Step 6: Fork and Create PR
 
-6.1 Fork the repo (idempotent):
-```bash
-gh repo fork Aleloca/prolato --clone=false
-```
-
-6.2 Get the fork name:
+6.1 Fork the repo and capture fork info (idempotent):
 ```bash
 FORK=$(gh repo fork Aleloca/prolato --clone=false 2>&1 | grep -o '[^ ]*/prolato' | head -1)
+FORK_OWNER=$(echo "$FORK" | cut -d'/' -f1)
 ```
 If the fork already exists, `gh` will print the existing fork name.
 
-6.3 Clone the fork to a temp directory:
+6.2 Clone the fork to a temp directory:
 ```bash
-TMPDIR=$(mktemp -d)
-gh repo clone "$FORK" "$TMPDIR" -- --depth=1
-cd "$TMPDIR"
+CONTRIB_TMPDIR=$(mktemp -d)
+gh repo clone "$FORK" "$CONTRIB_TMPDIR" -- --depth=1
+cd "$CONTRIB_TMPDIR"
 ```
 
-6.4 Create a descriptive branch:
+> Note: All subsequent git and gh commands in this section must run from `$CONTRIB_TMPDIR`. Use `cd "$CONTRIB_TMPDIR"` at the start or prefix git commands with `-C "$CONTRIB_TMPDIR"`.
+
+6.3 Create a descriptive branch:
 ```bash
 BRANCH="contrib/add-$(echo '{technologies}' | tr ' ' '-' | tr '[:upper:]' '[:lower:]')-support"
 git checkout -b "$BRANCH"
 ```
 Where `{technologies}` is derived from the gap analysis (e.g., "redis-bullmq").
 
-6.5 Apply the updated skill files:
+6.4 Apply the updated skill files:
 Write the updated content to the corresponding files under `skill/prolato/` in the cloned repo.
 
-6.6 Commit:
+6.5 Commit:
 ```bash
 git add skill/prolato/
 git commit -m "contrib: add {technologies} detection and deploy support"
 ```
 
-6.7 Push and create PR:
+6.6 Push and create PR:
 ```bash
 git push origin "$BRANCH"
 
@@ -178,12 +187,12 @@ EOF
 )"
 ```
 
-6.8 Cleanup:
+6.7 Cleanup:
 ```bash
-rm -rf "$TMPDIR"
+rm -rf "$CONTRIB_TMPDIR"
 ```
 
-6.9 Show result to user:
+6.8 Show result to user:
 ```
 Contribution submitted! PR: {pr_url}
 The Prolato maintainer will review your contribution. Thank you!
