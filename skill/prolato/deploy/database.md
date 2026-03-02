@@ -76,6 +76,7 @@ For each database in the analysis report's `database` array, read and follow the
 |----------|-------------------------|
 | postgres | `databases/postgres.md` |
 | mysql    | `databases/mysql.md`    |
+| mariadb  | `databases/mariadb.md` |
 | mongodb  | `databases/mongodb.md`  |
 | redis    | `databases/redis.md`    |
 | sqlite   | `databases/sqlite.md`   |

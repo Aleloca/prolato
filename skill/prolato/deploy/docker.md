@@ -54,6 +54,10 @@ If the project does NOT already have a `Dockerfile`, generate one based on the f
 | Nuxt.js (SSR)      | `dockerfiles/nuxt.md`       |
 | SvelteKit          | `dockerfiles/sveltekit.md`  |
 | Astro (SSR)        | `dockerfiles/astro.md`      |
+| Flask (Python)     | `dockerfiles/flask.md`      |
+| Remix              | `dockerfiles/remix.md`      |
+| Go                 | `dockerfiles/go.md`         |
+| NestJS             | `dockerfiles/nestjs.md`     |
 
 ### Unknown Framework
 

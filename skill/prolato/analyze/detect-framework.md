@@ -9,6 +9,7 @@ If `package.json` exists in the project root, read it and look in `dependencies`
 | Dependency in `dependencies` or `devDependencies` | Framework |
 |---|---|
 | `next` | Next.js |
+| `@remix-run/react` | Remix |
 | `gatsby` | Gatsby |
 | `nuxt` | Nuxt.js |
 | `@sveltejs/kit` | SvelteKit |
@@ -17,6 +18,7 @@ If `package.json` exists in the project root, read it and look in `dependencies`
 | `react-scripts` | React (Create React App) |
 | `vite` + `vue` (without Nuxt) | Vue (Vite) |
 | `@angular/core` | Angular |
+| `@nestjs/core` | NestJS |
 | `express` or `fastify` or `koa` or `hono` (without any frontend framework above) | Backend Node.js |
 
 The table is in priority order: if you find both `next` and `react`, the framework is Next.js (not React).
@@ -41,6 +43,7 @@ Check for the presence of these files/folders:
 |---|---|
 | `index.html` in root | Static HTML/CSS/JS |
 | `requirements.txt` or `pyproject.toml` or `Pipfile` | Python (Flask/Django/FastAPI) |
+| `go.mod` | Go |
 | `Dockerfile` (and nothing else recognizable) | Generic Docker |
 
 ## Step 3: Additional Information Per Framework
@@ -146,6 +149,34 @@ Values to set:
 - `output_dir`: `"build"` (static with adapter-static) or `"build"` (Docker with adapter-node)
 - `start_command`: `"node build"` (adapter-node), `null` (adapter-static)
 
+### Remix — always Docker
+
+- Build command: `npm run build`.
+- Output: `build/`.
+- Always needs Docker (SSR framework).
+
+Values to set:
+- `has_ssr`: `true`
+- `has_api_routes`: `true` (Remix uses loaders/actions as server-side data fetching)
+- `build_command`: `"npm run build"`
+- `output_dir`: `"build"`
+- `start_command`: `"npx remix-serve build/server/index.js"`
+
+### NestJS — always Docker
+
+- NestJS is a TypeScript backend framework. Always needs Docker.
+- Build command: `npm run build`.
+- Output: `dist/`.
+- Entry: `dist/main.js`.
+- Default port: `3000` (check `main.ts` for `app.listen()`).
+
+Values to set:
+- `has_ssr`: `false`
+- `has_api_routes`: `true`
+- `build_command`: `"npm run build"`
+- `output_dir`: `null`
+- `start_command`: `"node dist/main.js"`
+
 ### Backend Node.js (Express/Fastify/Koa/Hono) — always Docker
 
 - Find the entry file: `main` field in `package.json`, or `server.js`, `index.js`, `app.js`.
@@ -175,6 +206,26 @@ Values to set:
   - Flask: `"python -m flask run --host=0.0.0.0 --port=8080"` (or `"gunicorn app:app"` if `gunicorn` is in dependencies)
   - Django: `"python manage.py runserver 0.0.0.0:8080"` (or `"gunicorn {project_name}.wsgi"` if `gunicorn` is in dependencies)
   - FastAPI: `"uvicorn main:app --host 0.0.0.0 --port 8080"` (look for the file containing `FastAPI()` to determine the module, e.g., `app.main:app`)
+
+### Go (Gin/Echo/Fiber/Chi/net/http) — always Docker
+
+- Read `go.mod` for the Go version (the `go` directive, e.g., `go 1.22`).
+- Detect framework by scanning `.go` files for imports:
+  - `github.com/gin-gonic/gin` → Gin
+  - `github.com/labstack/echo` → Echo
+  - `github.com/gofiber/fiber` → Fiber
+  - `github.com/go-chi/chi` → Chi
+  - `net/http` (without any framework above) → Standard library
+- Find the entry file: typically `main.go` in root or `cmd/server/main.go`.
+- Default port: `8080`.
+
+Values to set:
+- `name`: `"go"` (append framework name if detected, e.g., `"go-gin"`)
+- `has_ssr`: `false`
+- `has_api_routes`: `true`
+- `build_command`: `null` (built inside Docker)
+- `output_dir`: `null`
+- `start_command`: `"./server"` (the compiled binary)
 
 ### Pure HTML/CSS/JS — always static
 

@@ -65,7 +65,8 @@ If a `docker-compose.yml` or `docker-compose.yaml` or `compose.yml` file exists,
 | Image | Database |
 |---|---|
 | `postgres:*` or `postgis/*` | PostgreSQL |
-| `mysql:*` or `mariadb:*` | MySQL/MariaDB |
+| `mysql:*`                | MySQL         |
+| `mariadb:*`              | MariaDB       |
 | `mongo:*` | MongoDB |
 | `redis:*` | Redis |
 
@@ -94,7 +95,7 @@ For each database found, add an element to the array with this information:
 ```
 
 Field details:
-- `engine`: `"postgres"`, `"mysql"`, `"sqlite"`, `"mongodb"`, `"redis"`
+- `engine`: `"postgres"`, `"mysql"`, `"mariadb"`, `"sqlite"`, `"mongodb"`, `"redis"`
 - `orm`: the name of the ORM found in Step 1, or `null` if no ORM is used
 - `schema_source`: the path to the ORM schema/configuration file, or `null`
 - `has_migrations`: `true` if a migrations folder exists (e.g., `prisma/migrations`, `migrations/`, `drizzle/`)

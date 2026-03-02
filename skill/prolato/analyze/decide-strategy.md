@@ -40,6 +40,9 @@ Does the project have a backend (Express, Fastify, Koa, Hono, Django, Flask, Fas
 | Vue (without Nuxt) | `static` |
 | Angular without Angular Universal | `static` |
 | Pure HTML/CSS/JS | `static` |
+| Remix | `docker` |
+| NestJS | `docker` |
+| Go (any) | `docker` |
 | Any project with Postgres/MySQL/Mongo/Redis database | `docker` |
 | Any project with only local SQLite | `docker` |
 | Generic Docker (Dockerfile only) | `docker` |
