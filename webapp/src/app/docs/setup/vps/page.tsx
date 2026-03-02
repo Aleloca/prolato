@@ -35,7 +35,7 @@ export default function VpsPage() {
       <p>
         The automatic script installs and configures all components (Caddy, Gitea, Docker, Webhook) in a single run:
       </p>
-      <pre><code>{replaceDomain(`curl -sSL https://raw.githubusercontent.com/user/prolato/main/setup/setup.sh | bash`)}</code></pre>
+      <pre><code>{replaceDomain(`curl -sSL https://raw.githubusercontent.com/Aleloca/prolato/main/setup/setup.sh | bash`)}</code></pre>
       <p>
         The script will ask for your domain, the Cloudflare token, and the Gitea credentials. Once finished, you can skip directly to{" "}
         <Link href="/docs/setup/verify">step 7 (Verify)</Link> to check that everything works.
