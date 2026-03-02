@@ -253,6 +253,129 @@ function FeatureCard({
   );
 }
 
+/* ── Self-Evolving Showcase ────────────────────────────────── */
+
+const evolutionSteps = [
+  {
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+      </svg>
+    ),
+    label: "Deploy",
+    desc: "You deploy a project with new technologies",
+  },
+  {
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
+      </svg>
+    ),
+    label: "Detect",
+    desc: "The skill spots undocumented patterns",
+  },
+  {
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+      </svg>
+    ),
+    label: "Share",
+    desc: "A PR brings that knowledge to everyone",
+  },
+];
+
+function MockPR() {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-80px" });
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 20, scale: 0.97 }}
+      animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="mx-auto max-w-lg"
+    >
+      <div className="overflow-hidden rounded-xl border border-stone-800 bg-[#0c0c0d]">
+        {/* PR header */}
+        <div className="border-b border-stone-800/60 px-5 py-4">
+          <div className="flex items-start gap-3">
+            {/* Merge icon */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0 }}
+              animate={isInView ? { opacity: 1, scale: 1 } : {}}
+              transition={{ delay: 0.3, duration: 0.3, type: "spring" }}
+              className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-500/10"
+            >
+              <svg className="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </motion.div>
+            <div className="min-w-0 flex-1">
+              <motion.p
+                initial={{ opacity: 0, x: -8 }}
+                animate={isInView ? { opacity: 1, x: 0 } : {}}
+                transition={{ delay: 0.4, duration: 0.3 }}
+                className="font-mono text-sm font-semibold leading-snug text-stone-100"
+              >
+                contrib: add Redis + BullMQ support
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={isInView ? { opacity: 1 } : {}}
+                transition={{ delay: 0.6, duration: 0.3 }}
+                className="mt-2 flex flex-wrap gap-2"
+              >
+                <span className="inline-flex items-center rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-0.5 font-mono text-[10px] font-medium text-amber-400">
+                  auto-generated
+                </span>
+                <span className="inline-flex items-center rounded-full border border-green-500/20 bg-green-500/10 px-2.5 py-0.5 font-mono text-[10px] font-medium text-green-400">
+                  community
+                </span>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+
+        {/* PR body */}
+        <div className="px-5 py-4">
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={isInView ? { opacity: 1 } : {}}
+            transition={{ delay: 0.7, duration: 0.4 }}
+            className="text-xs leading-relaxed text-stone-500"
+          >
+            Automatically generated after a successful deploy that required handling
+            technologies not yet documented in the skill files.
+          </motion.p>
+        </div>
+
+        {/* File changes */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={isInView ? { opacity: 1 } : {}}
+          transition={{ delay: 0.9, duration: 0.3 }}
+          className="border-t border-stone-800/60 px-5 py-3"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-stone-500">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+              </svg>
+              <span className="font-mono text-[11px]">3 files changed</span>
+            </div>
+            <div className="flex items-center gap-3 font-mono text-[11px]">
+              <span className="text-green-400">+47</span>
+              <span className="text-stone-600">-0</span>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </motion.div>
+  );
+}
+
 /* ── Page ───────────────────────────────────────────────────── */
 
 export default function Home() {
@@ -421,6 +544,50 @@ export default function Home() {
               }
               delay={0.3}
             />
+          </div>
+        </div>
+      </section>
+
+      {/* Separator */}
+      <div className="mx-auto max-w-5xl px-6">
+        <div className="h-px bg-gradient-to-r from-transparent via-stone-800/60 to-transparent" />
+      </div>
+
+      {/* ── Self-Evolving ── */}
+      <section className="relative py-20">
+        <div className="mx-auto max-w-4xl px-6">
+          <Reveal>
+            <p className="mb-3 text-center font-mono text-xs uppercase tracking-widest text-stone-500">
+              Self-evolving
+            </p>
+            <h2 className="mb-4 text-center font-serif text-2xl text-stone-100 sm:text-3xl">
+              A skill that teaches itself
+            </h2>
+            <p className="mx-auto mb-14 max-w-lg text-center text-sm text-stone-400">
+              When Prolato encounters new technologies during a deploy, it offers
+              to contribute that knowledge back. Every user makes the skill
+              smarter for everyone else.
+            </p>
+          </Reveal>
+
+          <MockPR />
+
+          <div className="mt-14 grid gap-6 sm:grid-cols-3">
+            {evolutionSteps.map((step, i) => (
+              <Reveal key={step.label} delay={i * 0.12}>
+                <div className="flex flex-col items-center text-center">
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg border border-stone-800/60 bg-stone-900/40 text-amber-400/80">
+                    {step.icon}
+                  </div>
+                  <span className="mb-1 text-sm font-semibold text-stone-200">
+                    {step.label}
+                  </span>
+                  <span className="text-xs leading-relaxed text-stone-500">
+                    {step.desc}
+                  </span>
+                </div>
+              </Reveal>
+            ))}
           </div>
         </div>
       </section>
