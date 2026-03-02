@@ -35,6 +35,7 @@ const sections: NavSection[] = [
     items: [
       { label: "Installation", href: "/docs/skill/install" },
       { label: "Usage", href: "/docs/skill/usage" },
+      { label: "Community Contribution", href: "/docs/skill/contribute" },
     ],
   },
   {

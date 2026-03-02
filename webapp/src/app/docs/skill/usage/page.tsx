@@ -149,7 +149,7 @@ export default function SkillUsagePage() {
 
       <hr />
       <p>
-        <Link href="/docs/maintenance/backup">Next step: Database Backup &rarr;</Link>
+        <Link href="/docs/skill/contribute">Next step: Community Contribution &rarr;</Link>
       </p>
     </div>
   );
