@@ -43,165 +43,25 @@ curl -s -o /dev/null -w "%{http_code}" \
 
 ## Step 2: Dockerfile Generation
 
-If the project does NOT already have a `Dockerfile`, generate one based on the framework detected by the analysis.
+If the project does NOT already have a `Dockerfile`, generate one based on the framework detected by the analysis. Read and follow the corresponding file:
 
-### Next.js SSR (with standalone output)
+| Framework          | File                        |
+|--------------------|-----------------------------|
+| Next.js (SSR)      | `dockerfiles/nextjs.md`     |
+| Express / Node.js  | `dockerfiles/express.md`    |
+| FastAPI (Python)   | `dockerfiles/fastapi.md`    |
+| Django (Python)    | `dockerfiles/django.md`     |
+| Nuxt.js (SSR)      | `dockerfiles/nuxt.md`       |
+| SvelteKit          | `dockerfiles/sveltekit.md`  |
+| Astro (SSR)        | `dockerfiles/astro.md`      |
 
-Before generating the Dockerfile, make sure `next.config.js` (or `.mjs`/`.ts`) contains `output: 'standalone'`. If not present, add it.
+### Unknown Framework
 
-```dockerfile
-FROM node:22-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-FROM node:22-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
-EXPOSE 3000
-ENV PORT=3000
-CMD ["node", "server.js"]
-```
-
-**Note**: the `builder` stage installs ALL dependencies (including devDependencies like `next`) because they are needed for the build. The `runner` stage copies only the `standalone` output, which already includes the necessary production dependencies, reducing the final image size.
-
-### Express / Node.js Backend
-
-```dockerfile
-FROM node:{NODE_VERSION}-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-EXPOSE {PORT}
-CMD ["node", "{entry_file}"]
-```
-
-Where:
-- `{NODE_VERSION}` → from the `node_version` field of the report (default: `22`)
-- `{PORT}` → the port detected in the code (default: `3000`)
-- `{entry_file}` → the entry file (e.g., `server.js`, `index.js`, `app.js`)
-
-If the project has a `build` command in `package.json` (e.g., for TypeScript), add a build stage:
-
-```dockerfile
-FROM node:{NODE_VERSION}-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-FROM node:{NODE_VERSION}-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY --from=builder /app/dist ./dist
-EXPOSE {PORT}
-CMD ["node", "dist/{entry_file}"]
-```
-
-### Python FastAPI
-
-```dockerfile
-FROM python:3.12-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY . .
-EXPOSE 8000
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-```
-
-Notes:
-- If the main file is not called `main.py`, adjust the `uvicorn` command (e.g., `app.main:app`).
-- If `pyproject.toml` exists with Poetry dependencies, use:
-  ```dockerfile
-  RUN pip install poetry && poetry config virtualenvs.create false && poetry install --no-dev
-  ```
-
-### Python Django
-
-```dockerfile
-FROM python:3.12-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY . .
-RUN python manage.py collectstatic --noinput
-EXPOSE 8000
-CMD ["gunicorn", "{project_name}.wsgi:application", "--bind", "0.0.0.0:8000"]
-```
-
-Where `{project_name}` is the Django module name (the folder containing `wsgi.py`).
-
-### Nuxt.js SSR
-
-```dockerfile
-FROM node:{NODE_VERSION}-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-FROM node:{NODE_VERSION}-alpine
-WORKDIR /app
-COPY --from=builder /app/.output ./.output
-EXPOSE 3000
-ENV PORT=3000
-CMD ["node", ".output/server/index.mjs"]
-```
-
-### SvelteKit (adapter-node)
-
-```dockerfile
-FROM node:{NODE_VERSION}-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-FROM node:{NODE_VERSION}-alpine
-WORKDIR /app
-COPY --from=builder /app/build ./build
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/package-lock.json ./
-RUN npm ci --only=production
-EXPOSE 3000
-ENV PORT=3000
-CMD ["node", "build"]
-```
-
-**Note**: unlike Next.js standalone, the SvelteKit output with `adapter-node` requires `node_modules` at runtime. Production dependencies must be installed in the runner stage.
-
-### Astro SSR
-
-```dockerfile
-FROM node:{NODE_VERSION}-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-FROM node:{NODE_VERSION}-alpine
-WORKDIR /app
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json ./
-EXPOSE 3000
-ENV PORT=3000
-ENV HOST=0.0.0.0
-CMD ["node", "./dist/server/entry.mjs"]
-```
-
-**Note**: Astro uses port 4321 in development, but in production we use port 3000 for consistency with other frameworks and with the `docker-compose.yml` template (which uses `${APP_PORT:-3000}:3000` as default). The `PORT=3000` variable is read by Astro SSR for binding.
+If the framework is NOT in the table above:
+1. Read one existing file as reference (e.g., `dockerfiles/express.md`) to understand the pattern
+2. Generate an appropriate Dockerfile following the same conventions (multi-stage build if applicable, resource-efficient, production-ready)
+3. Complete the deploy normally
+4. The contribute module (called after deploy) will detect this gap and offer to create a new dedicated file
 
 ### If the Dockerfile Already Exists
 
