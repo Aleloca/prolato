@@ -108,13 +108,37 @@ a PR titled "Add Redis support", don't open another one.
 
 ## Step 5: Generate Updated Skill Files
 
-For each gap identified in Step 2, generate the updated version of the affected skill file.
+For each gap identified in Step 2, generate the appropriate file updates.
 
-CRITICAL RULES:
-- ONLY ADD content. Never modify or remove existing rules, templates, or tables.
-- Add new rows to existing tables (e.g., new dependency → framework mapping in detect-framework.md)
-- Add new sections following the exact same formatting patterns as existing sections
-- Add new templates following the exact same structure as existing templates
+### For new database engines (not in `deploy/database.md` routing table)
+
+Create a NEW file `deploy/databases/{engine}.md` following the exact pattern of existing files (e.g., `deploy/databases/postgres.md`). The file must include:
+- Docker Compose service template (with healthcheck, volume, resource limits, log rotation)
+- Environment variables for `.env.production`
+- Environment variables for `.env` (Docker Compose interpolation)
+- Connection string format
+
+Also add a new row to the routing table in `deploy/database.md`.
+
+### For new frameworks (not in `deploy/docker.md` routing table)
+
+Create a NEW file `deploy/dockerfiles/{framework}.md` following the exact pattern of existing files (e.g., `deploy/dockerfiles/express.md`). The file must include:
+- Complete Dockerfile template
+- Any framework-specific notes
+
+Also add a new row to the routing table in `deploy/docker.md`.
+
+### For new detection rules
+
+Add new rows to the existing tables in:
+- `analyze/detect-framework.md` (new dependency → framework mapping)
+- `analyze/detect-database.md` (new dependency/pattern → database engine mapping)
+- `analyze/decide-strategy.md` (new strategy rules if needed)
+
+### CRITICAL RULES
+
+- For databases and dockerfiles: CREATE NEW FILES, don't modify existing technology files
+- For detection tables: ADD rows, never modify or remove existing rows
 - Base everything on what ACTUALLY WORKED during this deploy, not speculation
 - NEVER include any project-specific information:
   - No project names, URLs, or domains
