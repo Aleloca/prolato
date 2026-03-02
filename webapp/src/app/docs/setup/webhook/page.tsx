@@ -27,7 +27,7 @@ export default function WebhookPage() {
         Clone the webhook server code into the dedicated directory:
       </p>
       <pre><code>{`cd /opt/webhook
-git clone https://github.com/user/prolato.git .
+git clone https://github.com/Aleloca/prolato.git .
 cd webhook
 npm install --production`}</code></pre>
       <p>

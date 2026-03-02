@@ -42,7 +42,7 @@ export default function SkillInstallPage() {
       <p>
         Open the terminal on your local computer and clone the repository:
       </p>
-      <pre><code>git clone https://github.com/user/prolato.git</code></pre>
+      <pre><code>git clone https://github.com/Aleloca/prolato.git</code></pre>
       <p>
         This downloads all the Prolato code, including the skill for Claude Code.
       </p>

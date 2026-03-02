@@ -292,7 +292,7 @@ export default function Home() {
                 Read the docs
               </a>
               <a
-                href="https://github.com/user/prolato"
+                href="https://github.com/Aleloca/prolato"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-lg border border-stone-700 px-6 py-3 font-medium text-stone-300 transition-colors hover:border-stone-600 hover:text-stone-100"
@@ -499,7 +499,7 @@ export default function Home() {
                 Setup Guide
               </a>
               <a
-                href="https://github.com/user/prolato"
+                href="https://github.com/Aleloca/prolato"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-lg border border-stone-700 px-6 py-3 font-medium text-stone-300 transition-colors hover:border-stone-600 hover:text-stone-100"
@@ -535,7 +535,7 @@ export default function Home() {
                 Setup
               </a>
               <a
-                href="https://github.com/user/prolato"
+                href="https://github.com/Aleloca/prolato"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-stone-500 transition-colors hover:text-stone-300"
