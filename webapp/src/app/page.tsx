@@ -376,6 +376,84 @@ function MockPR() {
   );
 }
 
+/* ── Tech Stack ────────────────────────────────────────────── */
+
+const frameworks = [
+  { name: "Next.js", slug: "nextdotjs", color: "#fff" },
+  { name: "Remix", slug: "remix", color: "#fff" },
+  { name: "Nuxt", slug: "nuxtdotjs", color: "#00DC82" },
+  { name: "SvelteKit", slug: "svelte", color: "#FF3E00" },
+  { name: "Astro", slug: "astro", color: "#BC52EE" },
+  { name: "NestJS", slug: "nestjs", color: "#E0234E" },
+  { name: "Express", slug: "express", color: "#fff" },
+  { name: "Go", slug: "go", color: "#00ADD8" },
+  { name: "Flask", slug: "flask", color: "#fff" },
+  { name: "FastAPI", slug: "fastapi", color: "#009688" },
+  { name: "Django", slug: "django", color: "#2BA977" },
+];
+
+const databases = [
+  { name: "PostgreSQL", slug: "postgresql", color: "#4169E1" },
+  { name: "MySQL", slug: "mysql", color: "#4479A1" },
+  { name: "MariaDB", slug: "mariadb", color: "#00A9E0" },
+  { name: "MongoDB", slug: "mongodb", color: "#47A248" },
+  { name: "Redis", slug: "redis", color: "#FF4438" },
+  { name: "SQLite", slug: "sqlite", color: "#4DA6E0" },
+];
+
+function TechItem({
+  name,
+  slug,
+  color,
+  delay,
+}: {
+  name: string;
+  slug: string;
+  color: string;
+  delay: number;
+}) {
+  return (
+    <Reveal delay={delay}>
+      <div
+        className="group flex items-center gap-2.5 rounded-lg border border-stone-800/40 px-3.5 py-2 transition-all duration-300 hover:bg-stone-800/30"
+        style={{
+          borderColor: undefined,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor =
+            color === "#fff"
+              ? "rgba(245,158,11,0.3)"
+              : `${color}33`;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = "";
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={`https://cdn.simpleicons.org/${slug}/${color === "#fff" ? "78716c" : color.replace("#", "")}`}
+          alt={name}
+          width={16}
+          height={16}
+          loading="lazy"
+          className="h-4 w-4 opacity-40 transition-all duration-300 group-hover:opacity-100"
+          style={{ filter: "saturate(0) brightness(0.8)" }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLImageElement).style.filter = "saturate(1) brightness(1)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLImageElement).style.filter =
+              "saturate(0) brightness(0.8)";
+          }}
+        />
+        <span className="font-mono text-xs text-stone-600 transition-colors duration-300 group-hover:text-stone-300">
+          {name}
+        </span>
+      </div>
+    </Reveal>
+  );
+}
+
 /* ── Page ───────────────────────────────────────────────────── */
 
 export default function Home() {
@@ -587,6 +665,53 @@ export default function Home() {
                   </span>
                 </div>
               </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Separator */}
+      <div className="mx-auto max-w-5xl px-6">
+        <div className="h-px bg-gradient-to-r from-transparent via-stone-800/60 to-transparent" />
+      </div>
+
+      {/* ── Supported Stack ── */}
+      <section className="relative py-20">
+        <div className="mx-auto max-w-4xl px-6">
+          <Reveal>
+            <p className="mb-3 text-center font-mono text-xs uppercase tracking-widest text-stone-500">
+              Supported stack
+            </p>
+            <h2 className="mb-4 text-center text-2xl font-semibold text-stone-100 sm:text-3xl">
+              Works with what you already use
+            </h2>
+            <p className="mx-auto mb-14 max-w-lg text-center text-sm text-stone-400">
+              Auto-detected frameworks and databases. And if yours isn&apos;t listed yet,
+              the skill learns it on first deploy.
+            </p>
+          </Reveal>
+
+          {/* Frameworks */}
+          <Reveal delay={0.1}>
+            <p className="mb-4 text-center font-mono text-[10px] uppercase tracking-widest text-stone-600">
+              Frameworks
+            </p>
+          </Reveal>
+          <div className="mb-10 flex flex-wrap justify-center gap-2">
+            {frameworks.map((t, i) => (
+              <TechItem key={t.slug} {...t} delay={0.12 + i * 0.03} />
+            ))}
+          </div>
+
+          {/* Databases */}
+          <Reveal delay={0.2}>
+            <p className="mb-4 text-center font-mono text-[10px] uppercase tracking-widest text-stone-600">
+              Databases
+            </p>
+          </Reveal>
+          <div className="flex flex-wrap justify-center gap-2">
+            {databases.map((t, i) => (
+              <TechItem key={t.slug} {...t} delay={0.25 + i * 0.03} />
             ))}
           </div>
         </div>
