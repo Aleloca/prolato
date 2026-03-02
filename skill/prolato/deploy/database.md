@@ -68,234 +68,27 @@ And add `"compose_env"` to the webhook payload:
 
 ## Step 3: docker-compose.yml Generation
 
-Generate the complete `docker-compose.yml`, including the application service AND the database service.
+Generate the complete `docker-compose.yml`, including the application service AND the database service(s).
 
-### PostgreSQL
+For each database in the analysis report's `database` array, read and follow the corresponding file:
 
-```yaml
-services:
-  app:
-    build: .
-    restart: unless-stopped
-    ports:
-      - "${APP_PORT:-3000}:3000"
-    env_file:
-      - .env.production
-    depends_on:
-      db:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: '0.5'
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
+| Engine   | File                    |
+|----------|-------------------------|
+| postgres | `databases/postgres.md` |
+| mysql    | `databases/mysql.md`    |
+| mongodb  | `databases/mongodb.md`  |
+| redis    | `databases/redis.md`    |
+| sqlite   | `databases/sqlite.md`   |
 
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${PROJECT_NAME}
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U app"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: '0.5'
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
+If the database has multiple entries (e.g., postgres + redis), read and follow EACH corresponding file. Merge all services into a single `docker-compose.yml`.
 
-volumes:
-  db_data:
-```
+### Unknown Database Engine
 
-Environment variable for the app:
-```
-DATABASE_URL=postgresql://app:${DB_PASSWORD}@db:5432/${PROJECT_NAME}
-```
-
-### MySQL
-
-```yaml
-services:
-  app:
-    build: .
-    restart: unless-stopped
-    ports:
-      - "${APP_PORT:-3000}:3000"
-    env_file:
-      - .env.production
-    depends_on:
-      db:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: '0.5'
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  db:
-    image: mysql:8-oracle
-    restart: unless-stopped
-    volumes:
-      - db_data:/var/lib/mysql
-    environment:
-      MYSQL_USER: app
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: ${PROJECT_NAME}
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: '0.5'
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-volumes:
-  db_data:
-```
-
-Environment variable for the app:
-```
-DATABASE_URL=mysql://app:${DB_PASSWORD}@db:3306/${PROJECT_NAME}
-```
-
-### MongoDB
-
-```yaml
-services:
-  app:
-    build: .
-    restart: unless-stopped
-    ports:
-      - "${APP_PORT:-3000}:3000"
-    env_file:
-      - .env.production
-    depends_on:
-      db:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: '0.5'
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  db:
-    image: mongo:7
-    restart: unless-stopped
-    volumes:
-      - db_data:/data/db
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: app
-      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
-      MONGO_INITDB_DATABASE: ${PROJECT_NAME}
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: '0.5'
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-volumes:
-  db_data:
-```
-
-Environment variable for the app:
-```
-MONGODB_URI=mongodb://app:${DB_PASSWORD}@db:27017/${PROJECT_NAME}?authSource=admin
-```
-
-### Redis (Additional Service)
-
-Redis is added as an additional service, not as the primary database. It is added to `docker-compose.yml` alongside the primary database (or alone if the project only uses Redis).
-
-```yaml
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: '0.5'
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-```
-
-Environment variable for the app:
-```
-REDIS_URL=redis://redis:6379
-```
-
-If Redis is present alongside another database, add `redis_data` to volumes:
-```yaml
-volumes:
-  db_data:
-  redis_data:
-```
-
-And add `redis` as an app dependency:
-```yaml
-  app:
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-```
+If the engine is NOT in the table above:
+1. Read one existing file as reference (e.g., `databases/postgres.md`) to understand the pattern
+2. Generate a working docker-compose service with healthcheck, volume, resource limits, and log rotation
+3. Complete the deploy normally
+4. The contribute module (called after deploy) will detect this gap and offer to create a new dedicated file
 
 ### Important Notes for All Database Services
 
@@ -311,7 +104,7 @@ The app's internal port in `docker-compose.yml` must match the `EXPOSE` port in 
 - Express/Node.js: the port detected in the code (default `3000`)
 - FastAPI, Django: `8000`
 
-Replace `3000` in the examples above with the correct port.
+Replace `3000` in the examples with the correct port.
 
 ## Step 4: start.sh Generation
 
@@ -359,18 +152,6 @@ If the project uses Prisma (presence of `prisma/schema.prisma` or `@prisma/clien
   ```
   **Note**: run the seed ONLY if the seed file is idempotent (uses `upsert` or `createMany` with `skipDuplicates`). When in doubt, ask the user.
 
-Complete `start.sh` example for Prisma with migrations:
-```bash
-#!/bin/sh
-set -e
-echo "Waiting for database..."
-sleep 2
-echo "Running Prisma migrations..."
-npx prisma migrate deploy
-echo "Starting application..."
-exec npm start
-```
-
 #### Drizzle
 
 If the project uses Drizzle ORM (presence of `drizzle.config.ts` or `drizzle-orm` in dependencies):
@@ -385,18 +166,6 @@ If the project uses Drizzle ORM (presence of `drizzle.config.ts` or `drizzle-orm
   npx drizzle-kit push
   ```
 
-Complete `start.sh` example for Drizzle:
-```bash
-#!/bin/sh
-set -e
-echo "Waiting for database..."
-sleep 2
-echo "Running Drizzle migrations..."
-npx drizzle-kit migrate
-echo "Starting application..."
-exec npm start
-```
-
 #### Knex
 
 If the project uses Knex (presence of `knexfile.js` or `knex` in dependencies):
@@ -408,18 +177,6 @@ npx knex migrate:latest
 To run seeds (if present in the `seeds/` folder):
 ```bash
 npx knex seed:run
-```
-
-Complete `start.sh` example for Knex:
-```bash
-#!/bin/sh
-set -e
-echo "Waiting for database..."
-sleep 2
-echo "Running Knex migrations..."
-npx knex migrate:latest
-echo "Starting application..."
-exec npm start
 ```
 
 #### TypeORM
@@ -438,20 +195,6 @@ If the project uses TypeORM (presence of `data-source.ts` or `data-source.js` or
   npx typeorm migration:run -d data-source.js
   ```
 
-If the data-source file has a different name or path, adjust accordingly.
-
-Complete `start.sh` example for TypeORM (TypeScript project):
-```bash
-#!/bin/sh
-set -e
-echo "Waiting for database..."
-sleep 2
-echo "Running TypeORM migrations..."
-npx typeorm migration:run -d dist/data-source.js
-echo "Starting application..."
-exec npm start
-```
-
 #### Sequelize
 
 If the project uses Sequelize (presence of `.sequelizerc` or `sequelize` in dependencies):
@@ -465,21 +208,7 @@ To run seeds (if present):
 npx sequelize-cli db:seed:all
 ```
 
-Complete `start.sh` example for Sequelize:
-```bash
-#!/bin/sh
-set -e
-echo "Waiting for database..."
-sleep 2
-echo "Running Sequelize migrations..."
-npx sequelize-cli db:migrate
-echo "Starting application..."
-exec npm start
-```
-
 #### Django (Python)
-
-If the project is Django:
 
 ```bash
 python manage.py migrate
@@ -490,36 +219,12 @@ To run seeds/fixtures (if present):
 python manage.py loaddata {fixture_file}
 ```
 
-Complete `start.sh` example for Django:
-```bash
-#!/bin/sh
-set -e
-echo "Waiting for database..."
-sleep 2
-echo "Running Django migrations..."
-python manage.py migrate
-echo "Starting application..."
-exec gunicorn {project_name}.wsgi:application --bind 0.0.0.0:8000
-```
-
 #### SQLAlchemy / Alembic (Python)
 
 If the project uses Alembic (presence of `alembic.ini` or `alembic/` folder):
 
 ```bash
 alembic upgrade head
-```
-
-Complete `start.sh` example for Alembic:
-```bash
-#!/bin/sh
-set -e
-echo "Waiting for database..."
-sleep 2
-echo "Running Alembic migrations..."
-alembic upgrade head
-echo "Starting application..."
-exec uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
 ### Dockerfile Update
@@ -537,94 +242,12 @@ After generating `start.sh`, update the Dockerfile:
    CMD ["./start.sh"]
    ```
 
-### SQLite in Docker
-
-If the database is SQLite:
-- Do NOT add a database service to `docker-compose.yml`
-- Add a volume to persist the SQLite file:
-  ```yaml
-  services:
-    app:
-      build: .
-      restart: unless-stopped
-      ports:
-        - "${APP_PORT:-3000}:3000"
-      env_file:
-        - .env.production
-      volumes:
-        - sqlite_data:/app/data
-      deploy:
-        resources:
-          limits:
-            memory: 512M
-            cpus: '0.5'
-      logging:
-        driver: json-file
-        options:
-          max-size: "10m"
-          max-file: "3"
-
-  volumes:
-    sqlite_data:
-  ```
-- Make sure the SQLite file path in the code points to `/app/data/` (or the mounted folder).
-- Set `DATABASE_URL=file:/app/data/{project_name}.db` in `.env.production`.
-- Migrations work normally (Prisma, Drizzle, etc.) — no need to wait for the database.
-
-## Step 5: Database Environment Variables
-
-Add the following variables to the `.env.production` file (generated in `docker.md` Step 6):
-
-### For PostgreSQL
-```
-DB_PASSWORD={generated_password}
-PROJECT_NAME={project_name}
-DATABASE_URL=postgresql://app:{generated_password}@db:5432/{project_name}
-```
-
-### For MySQL
-```
-DB_PASSWORD={generated_password}
-DB_ROOT_PASSWORD={generated_root_password}
-PROJECT_NAME={project_name}
-DATABASE_URL=mysql://app:{generated_password}@db:3306/{project_name}
-```
-
-### For MongoDB
-```
-DB_PASSWORD={generated_password}
-PROJECT_NAME={project_name}
-MONGODB_URI=mongodb://app:{generated_password}@db:27017/{project_name}?authSource=admin
-```
-
-### For Redis
-```
-REDIS_URL=redis://redis:6379
-```
-
-### For SQLite
-```
-DATABASE_URL=file:/app/data/{project_name}.db
-```
-
-### Combinations
-
-If the project uses both a relational database and Redis, include ALL corresponding environment variables.
-
-Example with PostgreSQL + Redis:
-```
-DB_PASSWORD={generated_password}
-PROJECT_NAME={project_name}
-DATABASE_URL=postgresql://app:{generated_password}@db:5432/{project_name}
-REDIS_URL=redis://redis:6379
-```
-
 ## Flow Summary
 
 1. Generate password with `openssl rand -hex 24`
 2. Create `.env` file for Docker Compose interpolation (with `DB_PASSWORD`, `PROJECT_NAME`, etc.)
-3. Generate `docker-compose.yml` with app service + database service (with healthcheck, resource limits, log rotation)
+3. Read the per-database file(s) from `databases/` and generate `docker-compose.yml` with app service + database service(s)
 4. Generate `start.sh` with appropriate migration commands for the detected ORM
-5. Add database environment variables to `.env.production`
+5. Add database environment variables to `.env.production` (as specified in the per-database file)
 6. Update Dockerfile to use `start.sh`
 7. Continue with Step 7 of `docker.md` (Git init and push)
