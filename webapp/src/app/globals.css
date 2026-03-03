@@ -4,6 +4,7 @@
   --font-sans: var(--font-dm-sans);
   --font-mono: var(--font-jetbrains-mono);
   --font-serif: var(--font-instrument-serif);
+  --font-display: var(--font-playfair-display);
 }
 
 @keyframes blink {

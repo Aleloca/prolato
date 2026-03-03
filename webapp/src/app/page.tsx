@@ -454,7 +454,7 @@ export default function Home() {
               <Logo size="large" />
             </div>
 
-            <h1 className="font-serif text-5xl tracking-tight text-stone-100 sm:text-7xl lg:text-8xl">
+            <h1 className="font-display text-5xl tracking-tight text-stone-100 sm:text-7xl lg:text-8xl">
               Deploy from your terminal.
             </h1>
 
@@ -617,7 +617,7 @@ export default function Home() {
             <p className="mb-3 text-center font-mono text-xs uppercase tracking-widest text-stone-500">
               Self-evolving
             </p>
-            <h2 className="mb-4 text-center font-serif text-2xl text-stone-100 sm:text-3xl">
+            <h2 className="mb-4 text-center font-display text-2xl text-stone-100 sm:text-3xl">
               A skill that teaches itself
             </h2>
             <p className="mx-auto mb-14 max-w-lg text-center text-sm text-stone-400">
