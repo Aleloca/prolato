@@ -381,7 +381,7 @@ function MockPR() {
 const frameworks = [
   { name: "Next.js", slug: "nextdotjs", color: "#fff" },
   { name: "Remix", slug: "remix", color: "#fff" },
-  { name: "Nuxt", slug: "nuxtdotjs", color: "#00DC82" },
+  { name: "Nuxt", slug: "nuxt", color: "#00DC82" },
   { name: "SvelteKit", slug: "svelte", color: "#FF3E00" },
   { name: "Astro", slug: "astro", color: "#BC52EE" },
   { name: "NestJS", slug: "nestjs", color: "#E0234E" },
@@ -412,41 +412,20 @@ function TechItem({
   color: string;
   delay: number;
 }) {
+  const iconColor = color === "#fff" ? "d6d3d1" : color.replace("#", "");
   return (
     <Reveal delay={delay}>
-      <div
-        className="group flex items-center gap-2.5 rounded-lg border border-stone-800/40 px-3.5 py-2 transition-all duration-300 hover:bg-stone-800/30"
-        style={{
-          borderColor: undefined,
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor =
-            color === "#fff"
-              ? "rgba(245,158,11,0.3)"
-              : `${color}33`;
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = "";
-        }}
-      >
+      <div className="group flex items-center gap-2.5 rounded-lg border border-stone-700/40 bg-stone-900/40 px-4 py-2.5 transition-all duration-300 hover:border-stone-600/60 hover:bg-stone-800/50">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={`https://cdn.simpleicons.org/${slug}/${color === "#fff" ? "78716c" : color.replace("#", "")}`}
+          src={`https://cdn.simpleicons.org/${slug}/${iconColor}`}
           alt={name}
-          width={16}
-          height={16}
+          width={18}
+          height={18}
           loading="lazy"
-          className="h-4 w-4 opacity-40 transition-all duration-300 group-hover:opacity-100"
-          style={{ filter: "saturate(0) brightness(0.8)" }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLImageElement).style.filter = "saturate(1) brightness(1)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLImageElement).style.filter =
-              "saturate(0) brightness(0.8)";
-          }}
+          className="h-[18px] w-[18px] opacity-70 transition-opacity duration-300 group-hover:opacity-100"
         />
-        <span className="font-mono text-xs text-stone-600 transition-colors duration-300 group-hover:text-stone-300">
+        <span className="font-mono text-[13px] text-stone-300 transition-colors duration-300 group-hover:text-stone-100">
           {name}
         </span>
       </div>
@@ -685,19 +664,19 @@ export default function Home() {
             <h2 className="mb-4 text-center text-2xl font-semibold text-stone-100 sm:text-3xl">
               Works with what you already use
             </h2>
-            <p className="mx-auto mb-14 max-w-lg text-center text-sm text-stone-400">
-              Auto-detected frameworks and databases. And if yours isn&apos;t listed yet,
-              the skill learns it on first deploy.
+            <p className="mx-auto mb-12 max-w-lg text-center text-sm text-stone-400">
+              Auto-detected frameworks and databases with dedicated deploy
+              configurations.
             </p>
           </Reveal>
 
           {/* Frameworks */}
           <Reveal delay={0.1}>
-            <p className="mb-4 text-center font-mono text-[10px] uppercase tracking-widest text-stone-600">
+            <p className="mb-4 text-center font-mono text-[11px] uppercase tracking-widest text-stone-500">
               Frameworks
             </p>
           </Reveal>
-          <div className="mb-10 flex flex-wrap justify-center gap-2">
+          <div className="mb-10 flex flex-wrap justify-center gap-2.5">
             {frameworks.map((t, i) => (
               <TechItem key={t.slug} {...t} delay={0.12 + i * 0.03} />
             ))}
@@ -705,15 +684,32 @@ export default function Home() {
 
           {/* Databases */}
           <Reveal delay={0.2}>
-            <p className="mb-4 text-center font-mono text-[10px] uppercase tracking-widest text-stone-600">
+            <p className="mb-4 text-center font-mono text-[11px] uppercase tracking-widest text-stone-500">
               Databases
             </p>
           </Reveal>
-          <div className="flex flex-wrap justify-center gap-2">
+          <div className="mb-12 flex flex-wrap justify-center gap-2.5">
             {databases.map((t, i) => (
               <TechItem key={t.slug} {...t} delay={0.25 + i * 0.03} />
             ))}
           </div>
+
+          {/* Not listed callout */}
+          <Reveal delay={0.35}>
+            <div className="mx-auto max-w-xl rounded-xl border border-amber-500/15 bg-amber-500/[0.03] px-6 py-5 text-center">
+              <p className="text-sm leading-relaxed text-stone-300">
+                Don&apos;t see your stack?{" "}
+                <span className="font-semibold text-amber-400">
+                  Not a problem.
+                </span>{" "}
+                Prolato handles any framework on first deploy and{" "}
+                <span className="text-stone-200">
+                  learns it for everyone else
+                </span>{" "}
+                automatically.
+              </p>
+            </div>
+          </Reveal>
         </div>
       </section>
 
