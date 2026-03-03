@@ -159,7 +159,7 @@ function ArchitectureDiagram() {
                 initial={{ opacity: 0 }}
                 animate={isInView ? { opacity: 1 } : {}}
                 transition={{ delay: i * 0.08 + 0.15 }}
-                className="flex items-center px-1 text-stone-600"
+                className="mb-5 flex items-center px-1 text-stone-600"
               >
                 <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none">
                   <path
