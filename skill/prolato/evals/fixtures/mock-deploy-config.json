@@ -1,0 +1,9 @@
+{
+    "gitea_url": "https://git.example.dev",
+    "gitea_username": "testuser",
+    "gitea_token": "mock-gitea-token-12345",
+    "webhook_url": "https://webhook.example.dev",
+    "deploy_token": "mock-deploy-token-abcdef1234567890abcdef1234567890",
+    "domain": "example.dev",
+    "ssh_key_path": "~/.ssh/deploy_key"
+}

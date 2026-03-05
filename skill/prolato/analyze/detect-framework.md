@@ -269,4 +269,4 @@ Check in this order (stop at the first found):
 3. `engines.node` in `package.json` → contains a range (e.g., `>=20`, `^22.0.0`). Use the major version.
 4. Default: `22` (current LTS).
 
-Set the `node_version` field with the major version found (e.g., `"22"`, `"20"`).
+Set the `node_version` field with the **major version only** (e.g., `"22"`, `"20"`). This is important because Dockerfile templates use `node:{NODE_VERSION}-alpine`, and only major versions are guaranteed to have corresponding Alpine images on Docker Hub. If the source specifies `20.17.0`, extract just `20`.

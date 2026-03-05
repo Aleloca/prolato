@@ -1,6 +1,6 @@
 ---
 name: prolato
-description: Automatic deployment of web projects to an internal server. Use this command to deploy, update, delete, or manage your projects.
+description: Automatic deployment of web projects to a self-hosted server via Docker or static files. Use this skill whenever the user wants to deploy, publish, put online, update, redeploy, delete, remove, rollback, revert, check logs, check status, or list their deployed projects. Triggers on phrases like "deploya questo progetto", "metti online", "pubblica il sito", "deploy this project", "push to production", "show my projects", "delete the project", or any variation involving shipping a web project to a server.
 ---
 
 # Prolato — Automatic Deployment
@@ -17,7 +17,8 @@ Read the file `~/.deploy-config.json` to get the required credentials.
 
 1. **Check configuration**: read `~/.deploy-config.json`
    - If it does NOT exist → read and follow `setup/SKILL.md`
-   - If it exists → continue
+   - If it exists but is missing required fields (`gitea_url`, `gitea_username`, `gitea_token`, `webhook_url`, `deploy_token`, `domain`) → tell the user which fields are missing and re-run `setup/SKILL.md`
+   - If it exists and is valid → continue
 
 2. **Determine the action** from user input:
    - "deploy" / "publish" / "put online" → go to step 3

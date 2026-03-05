@@ -37,6 +37,7 @@ Clearly show what will be deleted, especially if there is a database with data.
 
 ```bash
 curl -s -X DELETE -H "Authorization: Bearer {DEPLOY_TOKEN}" \
+    -H "Content-Type: application/json" \
     "{WEBHOOK_URL}/projects/{PROJECT_NAME}?owner={USERNAME}"
 ```
 
@@ -44,6 +45,7 @@ curl -s -X DELETE -H "Authorization: Bearer {DEPLOY_TOKEN}" \
 
 ```bash
 curl -s -X POST -H "Authorization: Bearer {DEPLOY_TOKEN}" \
+    -H "Content-Type: application/json" \
     "{WEBHOOK_URL}/projects/{PROJECT_NAME}/rollback?owner={USERNAME}"
 ```
 

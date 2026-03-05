@@ -1,0 +1,122 @@
+{
+  "skill_name": "prolato",
+  "evals": [
+    {
+      "id": 1,
+      "name": "static-react-vite-deploy",
+      "prompt": "Deploya questo progetto. Il progetto è nella directory {fixtures_path}/react-vite-static. Il file di configurazione deploy è in {fixtures_path}/mock-deploy-config.json (usalo al posto di ~/.deploy-config.json). NON eseguire comandi reali (npm install, git, curl) — limita l'analisi e mostra cosa FARESTI: l'output JSON dell'analisi, i file che genereresti, e i comandi che eseguiresti. Per le variabili d'ambiente VITE_*, usa valori placeholder.",
+      "expected_output": "Analisi corretta: framework=react-vite, strategy=static, output_dir=dist, no database. Richiede le variabili VITE_API_URL e VITE_APP_TITLE prima del build. Propone il nome 'dashboard-app'.",
+      "assertions": [
+        {
+          "name": "framework-detected-as-react-vite",
+          "description": "Il framework deve essere identificato come React con Vite (non CRA, non Next.js)",
+          "check": "L'output JSON dell'analisi contiene framework.name che indica React+Vite (es. 'react-vite', 'React (Vite)', o simile)"
+        },
+        {
+          "name": "strategy-is-static",
+          "description": "La strategia di deploy deve essere 'static', non 'docker'",
+          "check": "deploy_strategy == 'static'"
+        },
+        {
+          "name": "output-dir-is-dist",
+          "description": "La output directory deve essere 'dist' (standard Vite)",
+          "check": "output_dir == 'dist' oppure static_output_dir == 'dist'"
+        },
+        {
+          "name": "no-database-detected",
+          "description": "Non deve essere rilevato alcun database",
+          "check": "database == null"
+        },
+        {
+          "name": "env-vars-detected",
+          "description": "Le variabili VITE_API_URL e VITE_APP_TITLE devono essere rilevate dal .env.example",
+          "check": "env_vars contiene sia VITE_API_URL che VITE_APP_TITLE"
+        },
+        {
+          "name": "build-time-env-requested",
+          "description": "Il modello deve chiedere i valori delle variabili VITE_* prima del build (sono build-time)",
+          "check": "Il modello menziona che le variabili VITE_* devono essere impostate prima del build"
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "docker-nextjs-prisma-postgres",
+      "prompt": "Metti online questo progetto. Il progetto è nella directory {fixtures_path}/nextjs-prisma-postgres. Il file di configurazione deploy è in {fixtures_path}/mock-deploy-config.json (usalo al posto di ~/.deploy-config.json). NON eseguire comandi reali — mostra cosa FARESTI: l'output JSON dell'analisi, il Dockerfile che genereresti, il docker-compose.yml, il start.sh, e i comandi che eseguiresti. Per le variabili d'ambiente, usa valori placeholder.",
+      "expected_output": "Analisi corretta: framework=nextjs con SSR, strategy=docker, database=postgres via Prisma. Genera Dockerfile multi-stage Next.js, docker-compose.yml con servizi app+db (postgres), start.sh con prisma migrate deploy, .env.production con DATABASE_URL che punta a db:5432.",
+      "assertions": [
+        {
+          "name": "framework-detected-as-nextjs",
+          "description": "Il framework deve essere identificato come Next.js",
+          "check": "framework.name contiene 'next' o 'Next.js'"
+        },
+        {
+          "name": "ssr-detected",
+          "description": "Il progetto deve essere riconosciuto come SSR/dinamico (ha API routes)",
+          "check": "has_ssr == true oppure has_api_routes == true"
+        },
+        {
+          "name": "strategy-is-docker",
+          "description": "La strategia deve essere 'docker' (progetto con SSR + database)",
+          "check": "deploy_strategy == 'docker'"
+        },
+        {
+          "name": "database-detected-as-postgres",
+          "description": "Il database deve essere rilevato come PostgreSQL via Prisma",
+          "check": "database array contiene un elemento con engine='postgres' e orm='prisma'"
+        },
+        {
+          "name": "dockerfile-generated",
+          "description": "Deve essere generato un Dockerfile per Next.js (multi-stage con standalone output)",
+          "check": "L'output contiene un Dockerfile con FROM node:*-alpine e riferimenti a Next.js standalone"
+        },
+        {
+          "name": "docker-compose-has-db-service",
+          "description": "Il docker-compose.yml deve contenere un servizio 'db' con postgres",
+          "check": "docker-compose.yml contiene servizio db con image postgres:*-alpine, healthcheck, volume"
+        },
+        {
+          "name": "start-sh-has-prisma-migrate",
+          "description": "start.sh deve contenere il comando prisma migrate deploy",
+          "check": "start.sh contiene 'prisma migrate deploy' (non 'db push', perché ci sono migrations)"
+        },
+        {
+          "name": "database-url-points-to-docker-service",
+          "description": "DATABASE_URL in .env.production deve puntare a 'db' (nome servizio Docker), non localhost",
+          "check": "DATABASE_URL contiene '@db:5432' e non '@localhost'"
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "management-list-projects",
+      "prompt": "Fammi vedere i miei progetti deployati. Il file di configurazione deploy è in {fixtures_path}/mock-deploy-config.json (usalo al posto di ~/.deploy-config.json). NON eseguire comandi reali (curl) — mostra il comando curl esatto che eseguiresti per listare i progetti.",
+      "expected_output": "Legge la config, costruisce il comando curl corretto con Authorization Bearer, URL del webhook /projects con parametro owner=testuser.",
+      "assertions": [
+        {
+          "name": "reads-config-file",
+          "description": "Il modello deve leggere il file di configurazione per ottenere webhook_url e deploy_token",
+          "check": "Il modello legge mock-deploy-config.json e ne estrae i valori"
+        },
+        {
+          "name": "correct-curl-endpoint",
+          "description": "Il comando curl deve puntare a /projects con il parametro owner",
+          "check": "Il curl contiene 'webhook.example.dev/projects' e 'owner=testuser'"
+        },
+        {
+          "name": "correct-auth-header",
+          "description": "Il curl deve usare Bearer token (non 'token' che è per Gitea)",
+          "check": "Il curl contiene 'Authorization: Bearer' (non 'Authorization: token')"
+        },
+        {
+          "name": "correct-routing",
+          "description": "Il modello deve seguire il percorso manage/SKILL.md, sezione List",
+          "check": "Il modello segue il flusso corretto: root SKILL.md → manage/SKILL.md → sezione List Projects"
+        }
+      ],
+      "files": []
+    }
+  ]
+}

@@ -15,31 +15,7 @@ Read `~/.deploy-config.json` to get the following variables:
 
 ## Step 1: Project Name
 
-Ask the user for the project name. Suggest a name derived from the current folder (e.g., if the folder is called `my-app`, suggest `my-app`).
-
-### Name Validation
-
-The name MUST comply with all these rules:
-
-- Only characters `[a-z0-9-]` (lowercase, numbers, hyphens)
-- Maximum length: 63 characters
-- CANNOT start with a hyphen `-`
-- CANNOT end with a hyphen `-`
-
-If the name is not valid, ask the user to choose another one explaining which rules were violated.
-
-### Availability Check
-
-After validation, verify the name is not already in use:
-
-```bash
-curl -s -o /dev/null -w "%{http_code}" \
-    -H "Authorization: token {USER_TOKEN}" \
-    "{GITEA_URL}/api/v1/repos/{username}/{project_name}"
-```
-
-- If it responds `200` → the project already exists. Ask the user if they want to overwrite it (re-deploy) or choose another name.
-- If it responds `404` → the name is available, proceed.
+Read and follow `project-name.md` for name selection, validation, and availability check.
 
 ## Step 2: Install Dependencies
 
@@ -132,92 +108,9 @@ If the directory doesn't exist or is empty, the build failed. Show the error to 
 
 ## Step 4: Git Init and Push
 
-### 4.1: Initialize Git Repository
+Read and follow `git-push.md` for git init, .gitignore, commit, Gitea repo creation, remote setup, and push to main.
 
-If the folder is NOT already a git repository (`.git/` doesn't exist):
-
-```bash
-git init
-```
-
-### 4.2: Create .gitignore
-
-If a `.gitignore` doesn't already exist, create an appropriate one:
-
-```
-node_modules/
-.env
-.env.local
-.env.development
-.env.production
-.DS_Store
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.next/
-out/
-dist/
-build/
-```
-
-If `.gitignore` already exists, verify it contains at least `node_modules` and `.env`. If missing, add them.
-
-### 4.3: Commit Source to Main
-
-```bash
-git add -A
-git commit -m "deploy: {project_name} via Prolato"
-```
-
-If the commit fails because there are no changes, ignore the error and continue.
-
-### 4.4: Create Gitea Repository
-
-```bash
-curl -s -X POST "{GITEA_URL}/api/v1/user/repos" \
-    -H "Authorization: token {USER_TOKEN}" \
-    -H "Content-Type: application/json" \
-    -d '{
-        "name": "{project_name}",
-        "private": true,
-        "auto_init": false
-    }'
-```
-
-If the repository already exists (error 409), continue without error.
-
-### 4.5: Add Remote
-
-Check if an `origin` remote already exists:
-
-```bash
-git remote get-url origin 2>/dev/null
-```
-
-- If `origin` does NOT exist → add as `origin`:
-  ```bash
-  git remote add origin git@git.{DOMAIN}:{username}/{project_name}.git
-  ```
-
-- If `origin` ALREADY EXISTS (and points to a different URL) → add as `deploy`:
-  ```bash
-  git remote add deploy git@git.{DOMAIN}:{username}/{project_name}.git
-  ```
-  In this case, use `deploy` instead of `origin` in all subsequent commands.
-
-If the remote already exists and points to the same URL, do nothing.
-
-### 4.6: Push Source to Main
-
-```bash
-git push -u {remote_name} main
-```
-
-Where `{remote_name}` is `origin` or `deploy` (based on step 4.5).
-
-Do NOT use `--force` for pushing to main.
-
-### 4.7: Push Output to Deploy Branch
+Then push the output to the deploy branch:
 
 Use `git subtree` to push ONLY the output folder to the `deploy` branch:
 
